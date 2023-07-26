@@ -18,12 +18,25 @@
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <string.h>
+# include <termios.h>
 # include <errno.h>
 # include <stdio.h>
 # include <signal.h>
 # include <dirent.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+
+#define RED_IN 0
+#define RED_OUT 1
+#define RED_APPEND 2
+
+typedef struct s_redirection
+{
+    int red_type;      // RED_IN (0) for '<', RED_OUT (1) for '>', RED_APPEND (2) for '>>'
+    int red_fd;        // File descriptor for the redirection
+	struct s_redirection	*next;
+	
+} t_redirection;
 
 typedef struct s_commands
 {
@@ -34,6 +47,7 @@ typedef struct s_commands
 	int				fds[2];
 	char			*vbin;
 	int     		cmd_pos;
+	t_redirection	*red;
 	struct s_commands	*next;
 }	t_commands;
 
@@ -63,8 +77,9 @@ char	*get_valid_bin(t_shell *shell, char *cmd);
 //PROCESS AND PIPE
 void	run_commands(t_shell *shell);
 int		is_it_builtin(char **builtins, char *cmd);
-void	exec_builtin_cmds();
 void	run_processes(t_commands *cmd, t_shell *shell, int fds[2]);
+void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell);
+void	ft_exec_in_child_process(t_commands *cmd);
 
 //PARSE ENV AND PATH
 char	*get_valid_bin(t_shell *tok, char *cmd);
@@ -118,5 +133,12 @@ void	ft_free_lst(t_list **headref);
 void	free_for_next_read(t_shell *shell);
 
 void	ft_exit_shell(t_shell *shell, int status);
+
+void	reset_terminal_settings(void);
+void	set_terminal_settings(void);
+
+//redirections
+void	handle_redirections(t_commands *cmd);
+
 
 #endif

@@ -47,6 +47,21 @@ void	free_split_alloc(char **str)
 	}
 }
 
+void	ft_free_red(t_redirection **headref)
+{
+	t_redirection	*current;
+
+	if (!(*headref))
+		return ;
+	while ((*headref)->next)
+	{
+		current = *headref;
+		*headref = (*headref)->next;
+		ft_free(current);
+	}
+	ft_free(*headref);
+}
+
 void	free_commands(t_commands **cmd_head)
 {
 	t_commands	*current;
@@ -60,13 +75,13 @@ void	free_commands(t_commands **cmd_head)
 		free_split_alloc(current->toks);
 		ft_free(current->vbin);
 		ft_free(current->cmd_str);
-		ft_free(current->red_str);
+		ft_free_red(&(current->red));
 		ft_free(current);
 	}
 	free_split_alloc((*cmd_head)->toks);
 	ft_free((*cmd_head)->vbin);
 	ft_free((*cmd_head)->cmd_str);
-	ft_free((*cmd_head)->red_str);
+	ft_free_red(&(current->red));
 	ft_free(*cmd_head);
 }
 

@@ -12,18 +12,14 @@
 
 #include "../../include/minishell.h"
 
-static char	*ft_increment(char *str, const char *delims)
+static char *ft_increment(char *str, const char *delims)
 {
-	char	*tmp;
+	char *tmp;
 
 	tmp = str;
-	while (*tmp)
-	{
-		if (ft_strchr(delims, *tmp))
-			tmp++;
-		else
-			break ;
-	}
+	while (*tmp && ft_strchr(delims, *tmp))
+		tmp++;
+
 	return (tmp);
 }
 
@@ -34,10 +30,8 @@ static int	ft_counter(char *str, const char *delims)
 	int		found_delim;
 
 	count = 0;
-	tmp = str;
 	found_delim = 0;
-	if (ft_strchr(delims, *tmp))
-		tmp = ft_increment(tmp, delims);
+	tmp = ft_increment(str, delims);
 	while (*tmp)
 	{
 		tmp++;
@@ -67,7 +61,6 @@ char	**ft_strtok(char *str, const char *delims)
 {
 	char	**tokens;
 	int		size;
-	int		i;
 	int		token_no;
 	char	*new_str;
 	char	*new_str_ptr;
@@ -79,8 +72,7 @@ char	**ft_strtok(char *str, const char *delims)
 		return (NULL);
 	new_str = ft_strtrim(str, delims);
 	if (!new_str)
-		return (NULL);
-	i = 0;
+		return (ft_free(tokens), NULL);
 	token_no = 0;
 	temp = new_str;
 	new_str_ptr = new_str;
@@ -88,31 +80,21 @@ char	**ft_strtok(char *str, const char *delims)
 	{
 		if (ft_strchr(delims, *new_str))
 		{
-			*(tokens + token_no) = make_string(temp, i);
+			*(tokens + token_no) = make_string(temp, new_str - temp);
 			if (!(*tokens + token_no))
-				return (free_split_alloc(tokens), NULL);
+				return (ft_free(new_str_ptr), free_split_alloc(tokens), NULL);
 			token_no++;
 			new_str = ft_increment(new_str, delims);
 			if (!*new_str)
 				break ;
-			i = 0;
 			temp = new_str;
-			continue ;
 		}
-		new_str++;
-		i++;
-		if (!*new_str)
-		{
-			*(tokens + token_no) = make_string(temp, i);
-			if (!(*tokens + token_no))
-				return (free_split_alloc(tokens), NULL);
-			token_no++;
-			break ;
-		}
+		else
+			new_str++;
 	}
-	ft_free(new_str_ptr);
-	tokens[token_no] = NULL;
-	return (tokens);
+	*(tokens + token_no) = make_string(temp, new_str - temp);
+	if (!(*(tokens + token_no)))
+		return(ft_free(new_str_ptr), free_split_alloc(tokens), NULL);
+	tokens[token_no + 1] = NULL;
+	return (ft_free(new_str_ptr), tokens);
 }
-
-//need to free new_str

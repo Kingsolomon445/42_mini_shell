@@ -31,6 +31,8 @@ void	ft_execute_one_builtin(t_commands *cmd, t_shell *shell)
 {
 	extern char	**environ;
 	
+	if (cmd->red)
+		handle_redirections(cmd);
 	if (compare_cmd("cd", cmd->toks[0]))
 		change_directory(shell, cmd);
 	else if (compare_cmd("export", cmd->toks[0]))
@@ -55,34 +57,73 @@ void	ft_execute_one_builtin(t_commands *cmd, t_shell *shell)
 	
 }
 
+int ft_dup_red(t_redirection *red)
+{
+    if (red->red_type == RED_IN)
+	{
+        if (dup2(red->red_fd, STDIN_FILENO) == -1)
+            return 0;
+    }
+	else
+	{
+        if (dup2(red->red_fd, STDOUT_FILENO) == -1)
+            return 0;
+    }
+    close(red->red_fd);
+    return 1;
+}
+
+
+void	handle_redirections(t_commands *cmd)
+{
+	t_redirection *current_red;
+
+	current_red = cmd->red;
+	while (current_red)
+	{
+		ft_dup_red(current_red);
+		current_red = current_red->next;
+	} 
+}
+
+void	ft_exec_in_child_process(t_commands *cmd)
+{
+	extern char	**environ;
+
+	if (cmd->red)
+		handle_redirections(cmd);
+	execve(cmd->vbin, cmd->toks, environ);
+	ft_putstr_fd("minishell: ", 2);
+	ft_putstr_fd(cmd->toks[0], 2);
+	ft_putstr_fd(": command not found\n", 2);
+	// free_for_next_read(shell);
+	exit(127);
+}
+
 void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
 {
 	int			pid;
 	int			status;
-	extern char	**environ;
 
 	pid = fork();
 	if (pid < 0)
 		exit(EXIT_FAILURE);
 	else if (pid == 0)
-	{
-		execve(cmd->vbin, cmd->toks, environ);
-		ft_putstr_fd("minishell: ", 2);
-		ft_putstr_fd(cmd->toks[0], 2);
-		ft_putstr_fd(": command not found\n", 2);
-		free_for_next_read(shell);
-		exit(127);
-	}
+		ft_exec_in_child_process(cmd);
 	status = 0;
 	waitpid(pid, &status, 0);
 	shell->last_status = WEXITSTATUS(status);
 }
 
+
 void	run_commands(t_shell *shell)
 {
 	t_commands	*current_cmd;
+	int			original_stdout;
 
 	current_cmd = shell->cmd_head;
+	original_stdout = dup(STDOUT_FILENO);
+	set_terminal_settings();
 	if (shell->no_cmds == 1)
 	{
 		if (is_it_builtin(shell->builtins, current_cmd->toks[0]))
@@ -92,4 +133,8 @@ void	run_commands(t_shell *shell)
 	}
 	else
 		run_processes(shell->cmd_head, shell, shell->cmd_head->fds);
+	reset_terminal_settings();
+	close(STDOUT_FILENO);
+	dup2(original_stdout, STDOUT_FILENO);
+	close(original_stdout);
 }

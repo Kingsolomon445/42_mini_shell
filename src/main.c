@@ -42,7 +42,7 @@ int	main(void)
 
 	ignore_signal();
 	set_signal_act();
-	atexit(&checkleaks);
+	// atexit(&checkleaks);
 	shell = malloc(sizeof(t_shell));
 	if (!shell)
 		return (-1);

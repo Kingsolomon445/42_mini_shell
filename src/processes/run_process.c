@@ -51,7 +51,7 @@ void    run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 	if (!shell->sucess)
 		exit(EXIT_FAILURE);
     if (!is_it_builtin(shell->builtins, cmd->toks[0]))
-        execve(cmd->vbin, cmd->toks, environ);
+        ft_exec_in_child_process(cmd);
     else
        ft_execute_one_builtin(cmd, shell);
     exit(EXIT_SUCCESS);
@@ -62,7 +62,7 @@ void	run_processes(t_commands *cmd, t_shell *shell, int fds[2])
 	int	pid;
 	t_commands *prev_cmd;	
 	int		status;
-	
+
 	shell->sucess = 1;
 	if (pipe(cmd->fds) < 0)
 		ft_exit_shell(shell, EXIT_FAILURE);
