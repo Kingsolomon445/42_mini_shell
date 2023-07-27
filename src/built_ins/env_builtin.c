@@ -73,7 +73,7 @@ void	add_back_str_array(t_shell *shell, char *new_env)
 	}
 	result[i] = new_env;
 	result[++i] = NULL;
-	free(environ);
+	ft_free(environ);
 	environ = result;
 	shell->env = environ;
 }
@@ -98,14 +98,14 @@ void	export_env(t_shell *shell)
 	{
 		new_tmp = ft_strtrim(shell->input, " \t\r\f\v");
 		temp = ft_strtrim(new_tmp + 7, " \t\r\f\v");
-		printf("temp: %s\n", temp);
+		ft_free(new_tmp);
 		if (!ft_isalpha(*temp))
 		{
 			ft_printf_fd(1, "minishell: export: `%s': not a valid identifier\n", temp);
 			shell->last_status = 1;
+			ft_free(temp);
 			return ;
 		}
-		ft_free(new_tmp);
 		equalsto = ft_strchr(temp, '=');
 		env_title = ft_substr(temp, 0, equalsto - temp);
 		if (*(equalsto + 1) == ' ')
@@ -113,26 +113,23 @@ void	export_env(t_shell *shell)
 			ft_free(temp);
 			temp = ft_strjoin(env_title, "= ");
 		}
-		printf("temp == %s    env_title == %s\n", temp, env_title);
 		if (getenv(env_title))
 		{
 			while (!ft_strnstr(shell->env[i], env_title, \
 			ft_strlen(shell->env[i])) && shell->env[i])
 				i++;
-			if (i)
+			if (i) // why?
 			{
 				free(shell->env[i]);
 				shell->env[i] = ft_strdup(temp);
 			}
 			else
-			{
 				add_back_str_array(shell, temp);
-				free(temp);
-				temp = NULL;
-			}
 		}
 		else
 			add_back_str_array(shell, temp);
+		ft_free(temp);
+		ft_free(env_title);
 	}
 	shell->last_status = 0;
 }

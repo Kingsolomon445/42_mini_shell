@@ -183,28 +183,26 @@ void	ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd)
 
 void	parse_commands(t_shell *shell)
 {
-	int		i;
 	int		cmd_pos;
 	t_commands	*new;
 	char	**commands;
 
-	i = 0;
 	shell->no_cmds = count_ocurrence(shell->input, '|') + 1;
 	cmd_pos = 0;
 	commands = ft_split(shell->input, '|');
 	if (!commands)
 		ft_exit_shell(shell, EXIT_FAILURE);
-	while (*(commands + i))
+	while (*(commands + cmd_pos))
 	{
-		cmd_pos++;
-		new = ft_lstnew_cmd(*(commands + i), shell, cmd_pos);
+		new = ft_lstnew_cmd(*(commands + cmd_pos), shell, cmd_pos + 1);
 		if (!new)
 			break;
 		if (!shell->cmd_head)
 			shell->cmd_head = new;
 		else
 			ft_lstadd_back_cmd(&(shell->cmd_head), new);
-		i++;
+		cmd_pos++;
+
 	}
 	free_split_alloc(commands);
 	if (!new)

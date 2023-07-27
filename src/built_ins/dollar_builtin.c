@@ -67,20 +67,15 @@ char	*make_new_predollar(char *old_pre_dollar, int *is_even)
 	int		i;
 
 	i = 0;
-	while (old_pre_dollar[i])
-	{
-		if (!ft_strchr("\\", old_pre_dollar[i]))
-			break ;
+	while (old_pre_dollar[i] && ft_strchr("\\", old_pre_dollar[i]))
 		i++;
-	}
 	if (i % 2)
 		*is_even = 0;
 	if (i >= 4)
 	{
-		temp = malloc((i / 4) + 1);
+		temp = ft_substr(old_pre_dollar, 0, i / 4);
 		if (!temp)
 			return (ft_free(old_pre_dollar), NULL);
-		ft_strlcpy(temp, old_pre_dollar, (i / 4) + 1);
 		pre_dollar = ft_strjoin(temp, old_pre_dollar + i);
 		return (ft_free(temp), ft_free(old_pre_dollar), pre_dollar);
 	}
@@ -88,10 +83,23 @@ char	*make_new_predollar(char *old_pre_dollar, int *is_even)
 	return (ft_free(old_pre_dollar), pre_dollar);
 }
 
-// static void	sub_expand_dollar()
-// {
-	
-// }
+static char *get_env_value(t_shell *shell, char *var, int is_even)
+{
+	char	*value;
+
+	if (is_even && compare_cmd("?", var))
+		value = ft_itoa(shell->last_status);
+	else if (is_even)
+		value = getenv(var);
+	else
+		value = var;
+	if (!value)
+		value = ft_strdup("");
+	// else
+	// 	value = ft_strdup(value);
+	return (value);
+}
+
 
 static int	expand_dollar(char	*found_dollar, char *pre_dollar, int i, t_shell *shell)
 {
@@ -119,16 +127,7 @@ static int	expand_dollar(char	*found_dollar, char *pre_dollar, int i, t_shell *s
 		var = ft_strdup(temp_var);
 	ft_free(temp_var);
 	printf("var == %s\n", var);
-	if (is_even && compare_cmd("?", var))
-		value = ft_itoa(shell->last_status);
-	else if (is_even)
-		value = getenv(var);
-	else
-		value = var;
-	if (!value)
-		value = ft_strdup("");
-	else
-		value = ft_strdup(value);
+	value = get_env_value(shell, var, is_even);
 	if (!post_dollar || !value || !pre_dollar)
 		return (ft_free(post_dollar), ft_free(value), ft_free(pre_dollar), ft_free(var), 0);
 	temp = ft_strjoin(pre_dollar, value);
@@ -141,29 +140,33 @@ static int	expand_dollar(char	*found_dollar, char *pre_dollar, int i, t_shell *s
 	return (ft_free(temp), ft_free(post_dollar), ft_free(value), ft_free(pre_dollar), ft_free(var), 1);
 }
 
-int	search_dollar_in_tok(t_shell *shell)
+int search_dollar_in_tok(t_shell *shell)
 {
 	int		i;
 	char	*found_dollar;
 	char	*pre_dollar;
+	size_t	len;
 
 	i = 0;
-	pre_dollar = NULL;
 	while (shell->cmd_head->toks[i])
 	{
 		found_dollar = ft_strchr(shell->cmd_head->toks[i], '$');
 		if (found_dollar)
 		{
-			pre_dollar = malloc(found_dollar - shell->cmd_head->toks[i] + 1);
+			len = found_dollar - shell->cmd_head->toks[i];
+			pre_dollar = ft_substr(shell->cmd_head->toks[i], 0, len);
 			if (!pre_dollar)
-				return (0);
-			ft_strlcpy(pre_dollar, shell->cmd_head->toks[i], found_dollar - shell->cmd_head->toks[i] + 1);
+				return 0;
 			if (!expand_dollar(found_dollar, pre_dollar, i, shell))
-				return (0);
+			{
+				ft_free(pre_dollar);
+				return 0;
+			}
+			ft_free(pre_dollar);
 		}
 		i++;
 	}
-	return (1);
+	return 1;
 }
 
 //echo $USER\\jj\\\\

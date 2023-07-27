@@ -18,15 +18,13 @@ void	ft_free_lst(t_list **headref)
 
 	if (!(*headref))
 		return ;
-	while ((*headref)->next)
+	while (*headref)
 	{
 		current = *headref;
 		*headref = (*headref)->next;
 		ft_free(current->content);
 		ft_free(current);
 	}
-	ft_free((*headref)->content);
-	ft_free(*headref);
 }
 
 void	free_split_alloc(char **str)
@@ -53,13 +51,12 @@ void	ft_free_red(t_redirection **headref)
 
 	if (!(*headref))
 		return ;
-	while ((*headref)->next)
+	while (*headref)
 	{
 		current = *headref;
 		*headref = (*headref)->next;
 		ft_free(current);
 	}
-	ft_free(*headref);
 }
 
 void	free_commands(t_commands **cmd_head)
@@ -68,7 +65,7 @@ void	free_commands(t_commands **cmd_head)
 
 	if (!(*cmd_head))
 		return ;
-	while ((*cmd_head)->next)
+	while (*cmd_head)
 	{
 		current = *cmd_head;
 		*cmd_head = (*cmd_head)->next;
@@ -78,11 +75,6 @@ void	free_commands(t_commands **cmd_head)
 		ft_free_red(&(current->red));
 		ft_free(current);
 	}
-	free_split_alloc((*cmd_head)->toks);
-	ft_free((*cmd_head)->vbin);
-	ft_free((*cmd_head)->cmd_str);
-	ft_free_red(&(current->red));
-	ft_free(*cmd_head);
 }
 
 void	free_me_from_this_burden(t_shell *shell)

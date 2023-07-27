@@ -12,14 +12,30 @@
 
 #include "../../include/minishell.h"
 
-void	echo_echo(t_commands *cmd)
+#include <stdbool.h>
+
+void echo_echo(t_commands *cmd)
 {
-    // printf("first == %s second == %s-- third == %s\n", cmd->toks[0], cmd->toks[1], cmd->toks[2]);
+    int no_nl;
+    int start_idx;
+    int i;
+
+    start_idx = 1;
+    no_nl = 0;
     if (compare_cmd("-n", cmd->toks[1]))
-        write(1, cmd->toks[2], ft_strlen(cmd->toks[2]));
-    else
     {
-        write(1, cmd->toks[1], ft_strlen(cmd->toks[1]));
-        write(1, "\n", 1);
+        no_nl = 1;
+        start_idx = 2;
     }
+
+    i = start_idx;
+    while (cmd->toks[i])
+    {
+        write(1, cmd->toks[i], ft_strlen(cmd->toks[i]));
+        if (cmd->toks[i + 1])
+            write(1, " ", 1);
+        i++;
+    }
+    if (!no_nl)
+        write(1, "\n", 1);
 }

@@ -22,7 +22,6 @@ void	run_unset(t_shell *shell, char *env_title)
 
 	i = 0;
 	j = 0;
-	updated_env = NULL;
 	envlen = env_len(shell->env);
 	if (getenv(env_title))
 	{
@@ -41,7 +40,7 @@ void	run_unset(t_shell *shell, char *env_title)
 			j++;
 		}
 		updated_env[j] = NULL;
-		free(shell->env);
+		ft_free(shell->env);
 		shell->env = updated_env;
 		environ = shell->env;
 	}

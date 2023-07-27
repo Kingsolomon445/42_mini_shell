@@ -12,54 +12,69 @@
 
 #include "../../include/minishell.h"
 
-void	update_env_item(t_shell *shell, char *env_title, char *new_env)
+void update_env_item(t_shell *shell, char *env_title, char *new_env)
 {
-	extern char		**environ;
-	int				i;
-	char			*temp;
+	int		i;
+	char	*temp;
+	char	*env_var;
+	extern char	**environ;
 
 	i = 0;
 	temp = NULL;
-	if (getenv(env_title))
+	env_var = getenv(env_title);
+	if (env_var)
 	{
-		while (!ft_strnstr(environ[i], env_title, \
-		ft_strlen(environ[i])) && environ[i])
-			i++;
-		if (i)
+		while (shell->env[i])
 		{
-			ft_free(shell->env[i]);
-			temp = ft_strjoin(env_title, "=");
-			shell->env[i] = ft_strjoin(temp, new_env);
-			free(temp);
-			environ = shell->env;
+			if (ft_strnstr(shell->env[i], env_title, ft_strlen(env_title)))
+			{
+				ft_free(shell->env[i]);
+				temp = ft_strjoin(env_title, "=");
+				shell->env[i] = ft_strjoin(temp, new_env);
+				free(temp);
+				environ = shell->env;
+				break;
+			}
+			i++;
 		}
 	}
 }
 
-void	change_directory(t_shell *shell, t_commands *cmd)
+void change_directory(t_shell *shell, t_commands *cmd)
 {
-	char	*current_dir;
 	char	*old_dir;
+	char	*current_dir;
+	
+	old_dir = getcwd(NULL, 0);
+	if (!old_dir)
+	{
+		perror("minishell: cd");
+		shell->last_status = 1;
+		return;
+	}
 
-	current_dir = NULL;
-	old_dir = NULL;
-	old_dir = getcwd(old_dir, 0);
 	if (chdir(cmd->toks[1]) == -1)
 	{
-		ft_printf_fd(2, "minishell: cd: %s", cmd->toks[1]);
-		perror(" ");
+		ft_printf_fd(2, "minishell: cd: %s: ", cmd->toks[1]);
+		perror("");
 		shell->last_status = 1;
 	}
 	else
 	{
-		current_dir = getcwd(current_dir, 0);
+		current_dir = getcwd(NULL, 0);
+		if (!current_dir)
+		{
+			perror("minishell: cd");
+			ft_free(old_dir);
+			shell->last_status = 1;
+			return;
+		}
+
 		update_env_item(shell, "PWD", current_dir);
-		ft_free(current_dir);
 		update_env_item(shell, "OLDPWD", old_dir);
+		ft_free(current_dir);
 		shell->last_status = 0;
 	}
+
 	ft_free(old_dir);
 }
-//need to change env PWD and OLDPWD when directory is changed.
-//cat Makefile | grep m | head -c 5
-//cat | ls needs to print ls first and cat should wait for one

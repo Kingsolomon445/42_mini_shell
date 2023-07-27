@@ -16,14 +16,15 @@ void	get_pwd(t_shell *shell)
 {
 	char	*buff;
 	
-    // buff = NULL;
     buff = getcwd(NULL, 0);
     if (!buff)
     {
+        perror("minishell: pwd");
         shell->last_status = 1;
-        exit(EXIT_FAILURE);
+        return;
     }
-    // write(1, buff, ft_strlen(buff));
-    write(1, "find\nme\n", 8);
+    write(1, buff, ft_strlen(buff));
+    write(1, "\n", 1);
+    ft_free(buff);
     shell->last_status = 0;
 }

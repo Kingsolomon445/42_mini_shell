@@ -46,7 +46,7 @@ static int	ft_counter(char *str, const char *delims)
 	return (count + 1);
 }
 
-char	*make_string(char *tmp, int len)
+static char	*make_string(char *tmp, int len)
 {
 	char	*token;
 
