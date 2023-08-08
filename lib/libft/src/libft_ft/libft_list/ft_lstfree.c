@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_lstfree.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/12 15:32:18 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/07/20 10:45:31 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/06 17:49:05 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,4 +26,3 @@ void	ft_lstfree(t_list **list)
 		temp = *list;
 	}
 }
-

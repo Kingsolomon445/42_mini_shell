@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: sbhatta <sbhatta@student.42heilbronn.de    +#+  +:+       +#+         #
+#    By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/22 13:18:59 by sbhatta           #+#    #+#              #
-#    Updated: 2023/07/12 15:34:10 by sbhatta          ###   ########.fr        #
+#    Updated: 2023/08/06 15:09:42 by sbhatta          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,11 +16,11 @@ AR = ar
 CRS = crs
 NAME = libft.a
 
-SRC = 	./src/libft_ft/libft_to/ft_itoa.c  ./src/libft_ft/libft_to/ft_atoi.c ./src/libft_ft/libft_to/ft_toupper.c ./src/libft_ft/libft_to/ft_tolower.c ./src/libft_ft/libft_to/ft_atoi_long.c ./src/libft_ft/libft_is/ft_isspace.c \
+SRC = 	./src/libft_ft/libft_to/ft_itoa.c ./src/libft_ft/libft_to/ft_atoi_ulong.c ./src/libft_ft/libft_to/ft_atoi.c ./src/libft_ft/libft_to/ft_toupper.c ./src/libft_ft/libft_to/ft_tolower.c ./src/libft_ft/libft_to/ft_atoi_long.c ./src/libft_ft/libft_is/ft_isspace.c \
 		./src/libft_ft/libft_mem/ft_calloc.c ./src/libft_ft/libft_mem/ft_bzero.c ./src/libft_ft/libft_mem/ft_memcpy.c \
 		./src/libft_ft/libft_mem/ft_memset.c ./src/libft_ft/libft_mem/ft_memchr.c ./src/libft_ft/libft_mem/ft_memmove.c ./src/libft_ft/libft_mem/ft_memcmp.c \
 		./src/libft_ft/libft_put/ft_putchar_fd.c ./src/libft_ft/libft_put/ft_putstr_fd.c ./src/libft_ft/libft_put/ft_putendl_fd.c ./src/libft_ft/libft_put/ft_putnbr_fd.c \
-		./src/libft_ft/libft_is/ft_isdigit.c ./src/libft_ft/libft_is/ft_isalnum.c ./src/libft_ft/libft_is/ft_isalpha.c  ./src/libft_ft/libft_is/ft_isascii.c ./src/libft_ft/libft_is/ft_isprint.c \
+		./src/libft_ft/libft_is/ft_isdigit.c ./src/libft_ft/libft_is/ft_isalnum.c ./src/libft_ft/libft_is/ft_isalpha.c  ./src/libft_ft/libft_is/ft_isascii.c ./src/libft_ft/libft_is/ft_isprint.c ./src/libft_ft/libft_is/ft_isnumber.c\
 		./src/libft_ft/libft_str/ft_strlen.c ./src/libft_ft/libft_str/ft_strlcat.c ./src/libft_ft/libft_str/ft_strlcpy.c ./src/libft_ft/libft_str/ft_strchr.c \
 		./src/libft_ft/libft_str/ft_strrchr.c ./src/libft_ft/libft_str/ft_strnstr.c ./src/libft_ft/libft_str/ft_strtrim.c ./src/libft_ft/libft_str/ft_strncmp.c \
 		./src/libft_ft/libft_str/ft_substr.c ./src/libft_ft/libft_str/ft_split.c ./src/libft_ft/libft_str/ft_strmapi.c \

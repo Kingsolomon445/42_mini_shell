@@ -1,15 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   token_process.c                                    :+:      :+:    :+:   */
+/*   ft_isnumber.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/12 18:43:59 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/07/19 12:48:30 by ofadahun         ###   ########.fr       */
+/*   Created: 2023/08/05 15:14:35 by sbhatta           #+#    #+#             */
+/*   Updated: 2023/08/05 15:16:38 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/minishell.h"
+int	ft_isnumber(char *str)
+{
+	int	i;
 
-
+	i = 0;
+	if (str[i] == '-' || str[i] == '+')
+		i++;
+	if (!str[i])
+		return (0);
+	while (str[i] != '\0')
+	{
+		if (!(str[i] >= '0' && str[i] <= '9'))
+			return (0);
+		i++;
+	}
+	return (1);
+}

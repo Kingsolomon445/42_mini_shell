@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env_builtin.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/14 17:18:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/07/19 13:10:43 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/06 15:29:02 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,20 @@ int	env_len(char **str)
 	while (str[i])
 		i++;
 	return (i);
+}
+
+int	check_env(char **env, char *env_title)
+{
+	int	i;
+
+	i = 0;
+	while (env[i])
+	{
+		if (ft_strnstr(env[i], env_title, ft_strlen(env_title)))
+			return (1);
+		i++;
+	}
+	return (0);
 }
 
 void	init_shellenv(t_shell *shell)
@@ -39,6 +53,7 @@ void	init_shellenv(t_shell *shell)
 		i++;
 	}
 	shell->env[i] = NULL;
+	environ = shell->env;
 }
 
 void	print_env(char **env)
@@ -48,13 +63,49 @@ void	print_env(char **env)
 	i = 0;
 	while (env[i])
 	{
-		ft_printf_fd(1, "%s\n", env[i]);
+		if (ft_strchr(env[i], '='))
+			ft_printf_fd(1, "%s\n", env[i]);
 		i++;
 	}
-	i = 0;
 }
 
-void	add_back_str_array(t_shell *shell, char *new_env)
+void	print_export(void)
+{
+	extern char	**environ;
+	int			i;
+	int			j;
+	int			equalcount;
+
+	i = 0;
+	j = 0;
+	equalcount = 0;
+	while (environ[i])
+	{
+		ft_printf_fd(1, "declare -x ");
+		while (environ[i][j])
+		{
+			ft_printf_fd(1, "%c", environ[i][j]);
+			if (environ[i][j] == '=' && equalcount == 0)
+			{
+				equalcount = 1;
+				ft_printf_fd(1, "\"");
+			}
+			if (environ[i][j + 1] == '\0')
+			{
+				if (equalcount)
+					ft_printf_fd(1, "\"\n");
+				else
+					ft_printf_fd(1, "\n");
+			}
+			j++;
+		}
+		equalcount = 0;
+		j = 0;
+		i++;
+	}
+}
+
+void	ft_putenv(t_shell *shell, char *new_env)
 {
 	extern char		**environ;
 	int				array_len;
@@ -73,66 +124,127 @@ void	add_back_str_array(t_shell *shell, char *new_env)
 	}
 	result[i] = new_env;
 	result[++i] = NULL;
-	ft_free(environ);
 	environ = result;
-	shell->env = environ;
+	shell->env = environ;	
+}
+
+void	print_export_failure(char *failed_env_title, int *error, int *fail)
+{
+	ft_printf_fd(2, "minishell: export: `%s': not a valid identifier\n", \
+	failed_env_title);
+	*fail = 1;
+	*error = 1;
+}
+
+void	export_more_envs(t_shell *shell, int i, int *fail)
+{
+	char	**env_split;
+	char	*new_full_env;
+	int		error;
+
+
+	error = 0;
+	if (*(shell->cmd_head->toks[i]) == '=')
+	{
+		print_export_failure(shell->cmd_head->toks[i], &error, fail);
+		return ;
+	}
+	// if (!ft_strchr(shell->cmd_head->toks[i], '=') && shell->cmd_head->toks[i + 1] && *shell->cmd_head->toks[i + 1])
+	// {
+	// 	print_export_failure(shell->cmd_head->toks[i + 1], &error, fail);
+	// }
+	new_full_env = ft_strdup(shell->cmd_head->toks[i]);
+	env_split = ft_split(new_full_env, '=');
+	if (!check_valid_identifier(env_split[0]))
+		print_export_failure(env_split[0], &error, fail);
+	if (!ft_isalpha(*env_split[0]))
+		print_export_failure(new_full_env, &error, fail);
+	if (error)
+	{
+		free_split_alloc(env_split);
+		ft_free(new_full_env);
+		return ;
+	}
+	if (check_env(shell->env, *env_split))
+	{
+		if (env_split[1])
+			update_env_item(shell, *env_split, env_split[1]);
+		else
+			update_env_item(shell, *env_split, ft_strdup("\0"));
+	}
+	else
+		ft_putenv(shell, new_full_env);
+	free_split_alloc(env_split);
 }
 
 void	export_env(t_shell *shell)
 {
-	char			*equalsto;
-	char			*temp;
-	char			*new_tmp;
-	char			*env_title;
-	int				i;
+	int	i;
+	int	fail;
 
-	i = 0;
-	equalsto = ft_strchr(shell->input, '=');
-	if (*(equalsto - 1) == ' ')
+	i = 1;
+	fail = 0;
+	if (shell->cmd_head->toks[1] == NULL)
 	{
-		ft_printf_fd(1, "minishell: export: `=': not a valid identifier\n");
-		shell->last_status = 1;
+		print_export();
+		shell->last_status = 0;
 		return ;
 	}
-	if (equalsto)
+	else
 	{
-		new_tmp = ft_strtrim(shell->input, " \t\r\f\v");
-		temp = ft_strtrim(new_tmp + 7, " \t\r\f\v");
-		ft_free(new_tmp);
-		if (!ft_isalpha(*temp))
+		while (shell->cmd_head->toks[i])
 		{
-			ft_printf_fd(1, "minishell: export: `%s': not a valid identifier\n", temp);
+			export_more_envs(shell, i, &fail);
+			i++;
+		}
+		if (fail)
 			shell->last_status = 1;
-			ft_free(temp);
-			return ;
-		}
-		equalsto = ft_strchr(temp, '=');
-		env_title = ft_substr(temp, 0, equalsto - temp);
-		if (*(equalsto + 1) == ' ')
-		{
-			ft_free(temp);
-			temp = ft_strjoin(env_title, "= ");
-		}
-		if (getenv(env_title))
-		{
-			while (!ft_strnstr(shell->env[i], env_title, \
-			ft_strlen(shell->env[i])) && shell->env[i])
-				i++;
-			if (i) // why?
-			{
-				free(shell->env[i]);
-				shell->env[i] = ft_strdup(temp);
-			}
-			else
-				add_back_str_array(shell, temp);
-		}
 		else
-			add_back_str_array(shell, temp);
-		ft_free(temp);
-		ft_free(env_title);
+			shell->last_status = 0;
 	}
-	shell->last_status = 0;
 }
 
-//issues: need to handle spaces infront and after = : DONE
-//issue2: need to handle _
+// void	export_more_envs(t_shell *shell, int i)
+// {
+// 	char	**env_split;
+// 	char	*new_full_env;
+// 	int		fail;
+
+// 	if (shell->cmd_head->toks[1] == NULL)
+// 	{
+// 		print_export();
+// 		shell->last_status = 0;
+// 		return ;
+// 	}
+// 	fail = 0;
+// 	if (*(shell->cmd_head->toks[i]) == '=')
+// 	{
+// 		print_export_failure(shell->cmd_head->toks[i], &fail);
+// 		shell->last_status = 1;
+// 		return ;
+// 	}
+// 	new_full_env = ft_strdup(shell->cmd_head->toks[i]);
+// 	env_split = ft_split(new_full_env, '=');
+// 	if (!check_valid_identifier(env_split[0]))
+// 		print_export_failure(env_split[0], &fail);
+// 	if (!ft_isalpha(*env_split[0]))
+// 		print_export_failure(new_full_env, &fail);
+// 	if (fail)
+// 	{
+// 		shell->last_status = 1;
+// 		free_split_alloc(env_split);
+// 		ft_free(new_full_env);
+// 		return ;
+// 	}
+// 	if (check_env(shell->env, *env_split))
+// 	{
+// 		if (env_split[1])
+// 			update_env_item(shell, *env_split, env_split[1]);
+// 		else
+// 			update_env_item(shell, *env_split, ft_strdup("\0"));
+// 	}
+// 	else
+// 		ft_putenv(shell, new_full_env);
+// 	free_split_alloc(env_split);
+// 	shell->last_status = 0;
+// }

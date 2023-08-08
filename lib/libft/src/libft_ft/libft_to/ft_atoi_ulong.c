@@ -1,21 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_atoi_long.c                                     :+:      :+:    :+:   */
+/*   ft_atoi_ulong.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/15 14:13:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/05 14:46:30 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/05 15:32:09 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include    "../../../include/libft.h"
 
-static long	ft_atoi_long_sup(const char *str, int i)
+static unsigned long	ft_atoi_ulong_sup(const char *str, int i)
 {
-	int		digit;
-	long	result;
+	int					digit;
+	unsigned long		result;
 
 	digit = 0;
 	result = 0;
@@ -40,11 +40,11 @@ static long	ft_atoi_long_sup(const char *str, int i)
 	return (result);
 }
 
-long	ft_atoi_long(const char *str)
+unsigned long	ft_atoi_ulong(const char *str)
 {
-	int			sign;
-	long		result;
-	int			i;
+	int					sign;
+	unsigned long		result;
+	int					i;
 
 	sign = 0;
 	result = 0;
@@ -61,7 +61,7 @@ long	ft_atoi_long(const char *str)
 		sign = 0;
 		i++;
 	}
-	result = ft_atoi_long_sup(str, i);
+	result = ft_atoi_ulong_sup(str, i);
 	if (sign == 1)
 		return (-result);
 	return (result);

@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:49:41 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/07/20 11:15:45 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/08 17:50:04 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,20 @@ void	ft_free_red(t_redirection **headref)
 		ft_free(current);
 	}
 }
+void	ft_free_dollar(t_dollar **headref)
+{
+	t_dollar	*current;
+
+	if (!(*headref))
+		return ;
+	while (*headref)
+	{
+		current = *headref;
+		*headref = (*headref)->next;
+		ft_free(current->value);
+		ft_free(current);
+	}
+}
 
 void	free_commands(t_commands **cmd_head)
 {
@@ -96,5 +110,14 @@ void	ft_free(void *ptr)
 		free(ptr);
 		ptr = NULL;
 	}
+}
+
+void	free_for_next_read(t_shell *shell)
+{
+	ft_free(shell->input);
+	shell->input = NULL;
+	free_commands(&(shell->cmd_head));
+	// ft_free(shell->tok_var);
+	shell->cmd_head = NULL;
 }
 
