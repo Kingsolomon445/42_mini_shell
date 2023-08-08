@@ -22,6 +22,7 @@
 # include <errno.h>
 # include <stdio.h>
 # include <signal.h>
+# include <stdlib.h>
 # include <dirent.h>
 # include <readline/readline.h>
 # include <readline/history.h>
@@ -113,7 +114,7 @@ void	parse_input(t_shell *shell);
 char	**ft_split_commands(char const *s, char c, t_shell *shell);
 
 //TOKENIZATION
-char	**create_tokens(t_shell *shell, char *str, const char *delims);
+char	**create_tokens(char *str, const char *delims);
 
 //REDIRECTIONS
 int	handle_redirections(t_commands *cmd);
@@ -182,12 +183,13 @@ void	ignore_signal(void);
 void	sig_handler(int sig_num);
 
 //FREE
-void	free_commands(t_commands **cmd_head);
-void	free_split_alloc(char **str);
-void	free_me_from_this_burden(t_shell *shell);
+void	ft_free_cmds(t_commands **cmd_head);
+void	ft_free_split(char **str);
+void	ft_free_shell(t_shell *shell);
 void	ft_free(void *ptr);
 void	ft_free_lst(t_list **headref);
-void	free_for_next_read(t_shell *shell);
+void	ft_free_for_next_read(t_shell *shell);
+void	ft_free_red(t_redirection **headref);
 void	ft_free_dollar(t_dollar **headref);
 
 void	ft_exit_shell(t_shell *shell, long status);

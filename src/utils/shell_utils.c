@@ -97,6 +97,6 @@ int	run_here_doc(char *limiter)
 
 void	ft_exit_shell(t_shell *shell, long status)
 {
-	free_me_from_this_burden(shell);
+	ft_free_shell(shell);
 	exit(status & 0xff);
 }

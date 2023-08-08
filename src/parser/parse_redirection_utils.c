@@ -22,7 +22,6 @@ static int	search_if_dir(char *file_name)
 	if (!dir)
 		return (ft_free(new_file), 1);
 	dir = ft_substr(new_file, 0, dir - new_file + 1);
-	// printf("dir here is %s\n", dir);
 	if (opendir(dir))
 		return (1);
 	ft_printf_fd(2, "minishell: %s: No such file or directory\n", file_name);
@@ -53,17 +52,17 @@ int	extract_file(t_shell *shell, char *cmd_tmp, char red_type, int *fname_len)
 	while (cmd_tmp[*fname_len] && !ft_strchr(" ><\t\b\r\v", cmd_tmp[*fname_len]))
 		(*fname_len)++;
 	file_name = ft_substr(cmd_tmp, 0, *fname_len);
+	if (!file_name)
+	{
+		shell->sucess = 0;
+		return (ft_free(file_name), 0);
+	}
 	if (!*file_name)
 	{
 		shell->sucess = -2;
 		ft_printf_fd(2, "minishell: syntax error near unexpected token `newline'\n");
 		return (ft_free(file_name), 0);
 
-	}
-	if (!file_name)
-	{
-		shell->sucess = 0;
-		return (ft_free(file_name), 0);
 	}
 	if (!search_if_dir(file_name))
 	{
@@ -89,15 +88,15 @@ int	extract_delimiter(t_shell *shell, char *cmd_tmp, int *delim_len)
 	while (cmd_tmp[*delim_len] && !ft_strchr(" ><\t\b\r\v", cmd_tmp[*delim_len]))
 		(*delim_len)++;
 	delimeter = ft_substr(cmd_tmp, 0, *delim_len);
+	if (!delimeter)
+	{
+		shell->sucess = 0;
+		return (ft_free(delimeter), 0);
+	}
 	if (!*delimeter)
 	{
 		shell->sucess = -2;
 		ft_printf_fd(2, "minishell: syntax error near unexpected token `newline'\n");
-		return (ft_free(delimeter), 0);
-	}
-	if (!delimeter)
-	{
-		shell->sucess = 0;
 		return (ft_free(delimeter), 0);
 	}
 	fd = run_here_doc(delimeter);

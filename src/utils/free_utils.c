@@ -27,7 +27,7 @@ void	ft_free_lst(t_list **headref)
 	}
 }
 
-void	free_split_alloc(char **str)
+void	ft_free_split(char **str)
 {
 	int		i;
 
@@ -45,60 +45,16 @@ void	free_split_alloc(char **str)
 	}
 }
 
-void	ft_free_red(t_redirection **headref)
+
+
+void	ft_free_shell(t_shell *shell)
 {
-	t_redirection	*current;
-
-	if (!(*headref))
-		return ;
-	while (*headref)
-	{
-		current = *headref;
-		*headref = (*headref)->next;
-		ft_free(current);
-	}
-}
-void	ft_free_dollar(t_dollar **headref)
-{
-	t_dollar	*current;
-
-	if (!(*headref))
-		return ;
-	while (*headref)
-	{
-		current = *headref;
-		*headref = (*headref)->next;
-		ft_free(current->value);
-		ft_free(current);
-	}
-}
-
-void	free_commands(t_commands **cmd_head)
-{
-	t_commands	*current;
-
-	if (!(*cmd_head))
-		return ;
-	while (*cmd_head)
-	{
-		current = *cmd_head;
-		*cmd_head = (*cmd_head)->next;
-		free_split_alloc(current->toks);
-		ft_free(current->vbin);
-		ft_free(current->cmd_str);
-		ft_free_red(&(current->red));
-		ft_free(current);
-	}
-}
-
-void	free_me_from_this_burden(t_shell *shell)
-{
-	free_split_alloc(shell->path);
-	free_split_alloc(shell->env);
-	free_split_alloc(shell->builtins);
+	ft_free_split(shell->path);
+	ft_free_split(shell->env);
+	ft_free_split(shell->builtins);
 	ft_free(shell->welcome_str);
 	ft_free(shell->input);
-	free_commands(&(shell->cmd_head));
+	ft_free_cmds(&(shell->cmd_head));
 	ft_free_lst(&(shell->hist_head));
 	ft_free(shell);
 }
@@ -112,11 +68,11 @@ void	ft_free(void *ptr)
 	}
 }
 
-void	free_for_next_read(t_shell *shell)
+void	ft_free_for_next_read(t_shell *shell)
 {
 	ft_free(shell->input);
 	shell->input = NULL;
-	free_commands(&(shell->cmd_head));
+	ft_free_cmds(&(shell->cmd_head));
 	// ft_free(shell->tok_var);
 	shell->cmd_head = NULL;
 }

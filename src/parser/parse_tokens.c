@@ -1,98 +1,90 @@
-// /* ************************************************************************** */
-// /*                                                                            */
-// /*                                                        :::      ::::::::   */
-// /*   parse_tokens.c                                     :+:      :+:    :+:   */
-// /*                                                    +:+ +:+         +:+     */
-// /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
-// /*                                                +#+#+#+#+#+   +#+           */
-// /*   Created: 2023/08/07 17:38:34 by ofadahun          #+#    #+#             */
-// /*   Updated: 2023/08/08 11:55:53 by ofadahun         ###   ########.fr       */
-// /*                                                                            */
-// /* ************************************************************************** */
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   create_tokens.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/08/07 17:25:00 by ofadahun          #+#    #+#             */
+/*   Updated: 2023/08/08 17:07:36 by ofadahun         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-// #include "../../include/minishell.h"
+#include "../../include/minishell.h"
 
-// static void	make_new_dollar(char *str, t_eval_quotedtok_vars *vars, t_tokens *tok)
-// {
-// 	t_dollar	*dollar;
-
-// 	if (vars->expand_dollar == 1)
-// 	{
-// 		if (!str[vars->i + 1])
-// 			vars->expand_dollar = 0;
-// 		else if (!ft_isalpha(str[vars->i + 1]) && str[vars->i + 1] == '_' && str[vars->i + 1] != '?')
-// 			vars->expand_dollar = 0;
-// 	}
-// 	if (str[vars->i + 1] && ft_strchr("\"'", str[vars->i + 1]))
-// 	{
-// 		(vars->i)++;
-// 		vars->expand_dollar = 0;
-// 	}
-// 	else
-// 	{
-// 		dollar = ft_lstnew_dollar(vars->expand_dollar, vars->idx);
-// 		if (vars->idx == 0)
-// 			tok->dollar_head = dollar;
-// 		else
-// 			ft_lstadd_back_dollar(&tok->dollar_head, dollar);
-// 		(vars->idx)++;
-// 	}
-// }
-
-// static void	eval_quotes_with_dollar_symbol(t_eval_quotedtok_vars *vars, char *str, t_tokens *tok, char quote)
-// {
-// 	vars->expand_dollar = 0;
-// 	if (str[vars->i] == '"')
-// 		vars->expand_dollar = 1;
-// 	vars->i++;
-// 	while (str[vars->i] && str[vars->i] != quote)
-// 	{
-// 		if (str[vars->i] == '$')
-// 			make_new_dollar(str, vars, tok);
-// 		vars->new_str[vars->j++] = str[vars->i++];
-// 	}
-// 	vars->i++;
-// }
-
-// static t_eval_quotedtok_vars *eval_quotedtok_vars_init(char *new_str)
-// {
-// 	t_eval_quotedtok_vars	*vars;
+static int	make_token(t_create_tokens *vars)
+{
+	char	*token;
 	
-// 	vars = malloc(sizeof(t_eval_quotedtok_vars));
-// 	if (!vars)
-// 		return (NULL);
-// 	vars->i = 0;
-// 	vars->j = 0;
-// 	vars->idx = 0;
-// 	vars->new_str = new_str;
-// 	return (vars);
-// }
+	token = malloc(vars->i + 1);
+	if (!token)
+		return (0);
+	ft_strlcpy(token, vars->temp, vars->i + 1);
+	*(vars->tokens + vars->token_no) = token;
+	if (!(*vars->tokens + vars->token_no))
+		return (ft_free_split(vars->tokens), 0);
+	vars->token_no++;
+	return (1);
+}
 
-// char	*eval_quotedtok(char *str, t_tokens *tok)
-// {
-// 	char					new_str[ft_strlen(str) + 1];
-// 	t_eval_quotedtok_vars	*vars;
+static void	eval_quote(t_create_tokens *vars)
+{
+	char	quote;
 
-// 	vars = eval_quotedtok_vars_init(new_str);
-// 	if (!vars)
-// 		return (NULL);
-// 	while (str[vars->i])
-// 	{
-// 		if (ft_strchr("\"'", str[vars->i]))
-// 		{
-// 			eval_quotes_with_dollar_symbol(vars, str, tok, str[vars->i]);
-// 			continue ;
-// 		}
-// 		if (str[vars->i] == '$')
-// 		{
-// 			vars->expand_dollar = 1;
-// 			make_new_dollar(str, vars, tok);
-// 		}
-// 		if (ft_strchr("\"'", str[vars->i]))
-// 			continue ;
-// 		vars->new_str[vars->j++] = str[vars->i];
-// 		vars->i++;
-// 	}
-// 	vars->new_str[vars->j] = '\0';
-// 	return (ft_strdup(vars->new_str));
-// }
+	quote = *vars->new_str;
+	vars->new_str++;
+	vars->i++;
+	while(*vars->new_str != quote)
+	{
+		vars->new_str++;
+		vars->i++;
+	}
+}
+
+static t_create_tokens *create_tokens_vars_init(const char *delims, char *str)
+{
+	t_create_tokens *vars;
+
+	vars = malloc(sizeof(t_create_tokens));
+	vars->size = count_tokens(str, delims);
+	vars->tokens = (char **)malloc(sizeof(char *) * (vars->size + 1));
+	if (!vars->tokens)
+		return (NULL);
+	vars->new_str = ft_strtrim(str, delims);
+	if (!vars->new_str)
+		return (NULL);
+	vars->i = 0;
+	vars->token_no = 0;
+	vars->temp = vars->new_str;
+	vars->new_str_ptr = vars->new_str;
+	return (vars);
+}
+
+char	**create_tokens(char *str, const char *delims)
+{
+	t_create_tokens *vars;
+
+	vars = create_tokens_vars_init(delims, str);
+	if (!vars)
+		return (NULL);
+	while (*vars->new_str)
+	{
+		if (ft_strchr("\"'", *vars->new_str))
+			eval_quote(vars);
+		if (ft_strchr(delims, *vars->new_str))
+		{
+			if (!make_token(vars))
+				return (NULL);
+			vars->new_str = ft_increment(vars->new_str, delims);
+			vars->i = 0;
+			vars->temp = vars->new_str;
+			continue ;
+		}
+		vars->new_str++;
+		vars->i++;
+	}
+	if (!make_token(vars))
+		return (NULL);
+	vars->tokens[vars->token_no] = NULL;
+	return (ft_free(vars->new_str_ptr), vars->tokens);
+}

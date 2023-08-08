@@ -161,7 +161,7 @@ void	export_more_envs(t_shell *shell, int i, int *fail)
 		print_export_failure(new_full_env, &error, fail);
 	if (error)
 	{
-		free_split_alloc(env_split);
+		ft_free_split(env_split);
 		ft_free(new_full_env);
 		return ;
 	}
@@ -174,7 +174,7 @@ void	export_more_envs(t_shell *shell, int i, int *fail)
 	}
 	else
 		ft_putenv(shell, new_full_env);
-	free_split_alloc(env_split);
+	ft_free_split(env_split);
 }
 
 void	export_env(t_shell *shell)
@@ -232,7 +232,7 @@ void	export_env(t_shell *shell)
 // 	if (fail)
 // 	{
 // 		shell->last_status = 1;
-// 		free_split_alloc(env_split);
+// 		ft_free_split(env_split);
 // 		ft_free(new_full_env);
 // 		return ;
 // 	}
@@ -245,6 +245,6 @@ void	export_env(t_shell *shell)
 // 	}
 // 	else
 // 		ft_putenv(shell, new_full_env);
-// 	free_split_alloc(env_split);
+// 	ft_free_split(env_split);
 // 	shell->last_status = 0;
 // }

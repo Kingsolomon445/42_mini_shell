@@ -158,7 +158,7 @@ void	ft_exec_in_child_process(t_commands *cmd)
 	ft_putstr_fd("minishell: ", 2);
 	ft_putstr_fd(cmd->toks[0], 2);
 	ft_putstr_fd(": command not found\n", 2);
-	// free_for_next_read(shell);
+	// ft_free_for_next_read(shell);
 	exit(errno);
 }
 

@@ -40,11 +40,11 @@ int letter_count, int word_index)
     new_cmd = malloc(letter_count + 1);
 	res[word_index] = NULL;
 	if (!new_cmd)
-        return (free_split_alloc(res), 0);
+        return (ft_free_split(res), 0);
 	ft_strlcpy(new_cmd, start, letter_count + 1);
     trimmed_cmd = ft_strtrim(new_cmd, " \n\t\b\v\f");
     if (!*trimmed_cmd)
-        return (ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n"), ft_free(new_cmd), free_split_alloc(res), 0);
+        return (ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n"), ft_free(new_cmd), ft_free_split(res), 0);
     res[word_index] = trimmed_cmd;
 	return (ft_free(new_cmd), 1);
 }
@@ -61,7 +61,7 @@ char	**ft_split_commands(char const *s, char c, t_shell *shell)
     int     pipes;
 
 	if (!s)
-		return (0);
+		return (NULL);
 	str = (char *)s;
 	word_index = 0;
     s_quotes = 0;
@@ -74,28 +74,34 @@ char	**ft_split_commands(char const *s, char c, t_shell *shell)
 	{
 		letter_count = 0;
 		start = str;
-		while (*str)
+		while (*str && (*str != c || (s_quotes % 2) || (d_quotes % 2)))
 		{
-            if (*str == c && !(s_quotes % 2) && !(d_quotes % 2))
-            {
-                if (letter_count == 0)
-                    return (ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n"), set_status(shell, 258), free_split_alloc(res), NULL);
-                pipes++;
-                break ;
-            }
-			if (*str == '\'')
-				s_quotes++;
-			if (*str == '"')
-				d_quotes++;
-			letter_count++;
+            s_quotes += (*str == '\'');
+			d_quotes += (*str == '"');
+			letter_count += (*str != c || (s_quotes % 2) || (d_quotes % 2));
 			str++;
 		}
+
+        if (letter_count == 0 && *str == c)
+		{
+            ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n");
+            set_status(shell, 258);
+            ft_free_split(res);
+            return NULL;
+        }
+
 		if (letter_count > 0)
 		{
-			if (!(make_command(res, start, letter_count, word_index)))
-                return (set_status(shell, 12), NULL);
-			word_index++;
+            pipes += (*str == c);
+            str += (*str == c);
+			if (!make_command(res, start, letter_count, word_index))
+			{
+                set_status(shell, 12);
+                return NULL;
+            }
+            word_index++;
 		}
+
 		if (*str)
 			str++;
 	}

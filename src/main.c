@@ -48,10 +48,7 @@ static int	take_input(t_shell *shell)
 			ft_free(content);
 			ft_exit_shell(shell, EXIT_FAILURE);
 		}
-		if (!shell->hist_head)
-			shell->hist_head = new;
-		else
-			ft_lstadd_back(&(shell->hist_head), new);
+		ft_lstadd_back(&(shell->hist_head), new);
 		return (0);
 	}
 	return (ft_free(shell->input), 1);
@@ -93,25 +90,22 @@ int	parse_commands(t_shell *shell)
 	if (!commands)
 		return (0);
 	shell->no_cmds = count_commands(commands);
-	while (*(commands + cmd_pos))
+	while (commands[cmd_pos])
 	{
-		new = ft_lstnew_cmd(*(commands + cmd_pos), shell, cmd_pos + 1);
+		new = ft_lstnew_cmd(commands[cmd_pos], shell, cmd_pos + 1);
 		if (shell->red_status < 0)
 		{
 			shell->last_status = 258;
 			if (shell->red_status == -1)
 				shell->last_status = 127;
-			return (ft_free(new), free_split_alloc(commands), 0);
+			return (ft_free(new), ft_free_split(commands), 0);
 		}
 		if (!new)
-			return (free_split_alloc(commands), 0);
-		if (!shell->cmd_head)
-			shell->cmd_head = new;
-		else
-			ft_lstadd_back_cmd(&(shell->cmd_head), new);
+			return (ft_free_split(commands), 0);
+		ft_lstadd_back_cmd(&(shell->cmd_head), new);
 		cmd_pos++;
 	}
-	return (free_split_alloc(commands), 1);
+	return (ft_free_split(commands), 1);
 }
 
 int	main(void)
@@ -134,13 +128,11 @@ int	main(void)
 		add_history(shell->input);
 		parse_input(shell);
 		if (parse_commands(shell))
-		{
 			run_commands(shell);
-		}
 		ft_free_dollar(&shell->dollar_head);
 		shell->dollar_head = NULL;
-		free_for_next_read(shell);
+		ft_free_for_next_read(shell);
 	}
-	free_me_from_this_burden(shell);
+	ft_free_shell(shell);
 	return (0);
 }

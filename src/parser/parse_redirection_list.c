@@ -42,45 +42,16 @@ void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red)
 	current_red->next = new_red;
 }
 
-t_commands	*ft_lstnew_cmd(char *command, t_shell *shell, int cmd_pos)
+void	ft_free_red(t_redirection **headref)
 {
-	t_commands	*cmd;
+	t_redirection	*current;
 
-	cmd = malloc(sizeof(t_commands));
-	if (!cmd)
-		return (NULL);
-	cmd->next = NULL;
-	cmd->red = NULL;
-	shell->red_status = parse_redirection(shell, cmd, command);
-	if (shell->red_status != 1)
-		return (NULL);
-	if (!cmd->cmd_str)
-		return (NULL);
-	cmd->toks = create_tokens(shell, cmd->cmd_str, " \n\r\f\v\t");
-	if (!cmd->toks)
-		return (NULL);
-	if (!cmd->toks)
-		return (NULL);
-	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
-	if (!cmd->vbin)
-		return (NULL);
-	cmd->cmd_pos = cmd_pos;
-	return (cmd);
-}
-
-void	ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd)
-{
-	t_commands	*cur_cmd;
-
-	if (!new_cmd)
+	if (!(*headref))
 		return ;
-	if (!(*cmd_head))
+	while (*headref)
 	{
-		*cmd_head = new_cmd;
-		return ;
+		current = *headref;
+		*headref = (*headref)->next;
+		ft_free(current);
 	}
-	cur_cmd = *cmd_head;
-	while (cur_cmd->next)
-		cur_cmd = cur_cmd->next;
-	cur_cmd->next = new_cmd;
 }

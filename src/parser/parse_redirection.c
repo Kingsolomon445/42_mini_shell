@@ -54,10 +54,7 @@ char	*eval_red(t_shell *shell, t_commands *cmd, char *cmd_tmp)
 		shell->sucess = 0;
 		return (set_status(shell, 12), NULL);
 	}
-	if (!cmd->red)
-		cmd->red = vars->new_red;
-	else
-		ft_lstadd_back_red(&(cmd->red), vars->new_red);
+	ft_lstadd_back_red(&(cmd->red), vars->new_red);
 	vars->cmd_tmpptr = cmd_tmp;
 	if (vars->red_type == HEREDOC)
 		cmd_tmp = ft_strtrim(cmd_tmp + vars->delim_len, " \t\b\r\v");
@@ -71,44 +68,55 @@ char	*eval_red(t_shell *shell, t_commands *cmd, char *cmd_tmp)
 	return (ft_free(vars->cmd_tmpptr), cmd_tmp);
 }
 
-char	*eval_cmd(t_shell *shell, t_commands *cmd, char *cmd_tmp, int *dbl, int *sngl)
+int add_to_command(t_commands *cmd, char *cmd_to_add)
 {
-	char	*command_tmp_ptr;
-	char	*to_add;
-	int		cmd_length;
-
-	cmd_length = -1;
-	while (cmd_tmp[++cmd_length])
-	{
-		if (cmd_tmp[cmd_length] == '\'')
-			(*sngl)++;
-		if (cmd_tmp[cmd_length] == '"')
-			(*dbl)++;
-		if (ft_strchr("<>", cmd_tmp[cmd_length]) && *dbl % 2 == 0 && *sngl == 0)
-			break ;
-	}
-	to_add = ft_substr(cmd_tmp, 0, cmd_length);
-	//Need to fix couple fo stuffs
+	//Need to free
 	if (!cmd->cmd_str)
-		cmd->cmd_str = ft_strdup(to_add);
+		cmd->cmd_str = ft_strdup(cmd_to_add);
 	else
 	{
 		cmd->cmd_str = ft_strjoin(cmd->cmd_str, " ");
-		cmd->cmd_str = ft_strjoin(cmd->cmd_str, to_add);
+		cmd->cmd_str = ft_strjoin(cmd->cmd_str, cmd_to_add);
+	}
+	return (1);
+}
+
+char	*extract_command(t_commands *cmd, char *cmd_tmp, int *cmd_length, int *sngl, int *dbl)
+{
+	char	*cmd_to_add;
+	char	*new_cmd_tmp;
+
+	while (cmd_tmp[++(*cmd_length)])
+	{
+		(*sngl) += cmd_tmp[*cmd_length] == '\'';
+		(*dbl) +=  cmd_tmp[*cmd_length] == '"';
+		if (ft_strchr("<>", cmd_tmp[*cmd_length]) && *dbl % 2 == 0 && *sngl == 0)
+			break ;
+	}
+	cmd_to_add = ft_substr(cmd_tmp, 0, *cmd_length);
+	add_to_command(cmd, cmd_to_add);
+	new_cmd_tmp = ft_strtrim(cmd_tmp + *cmd_length, " \t\b\r\v");
+	return (ft_free(cmd_tmp), new_cmd_tmp);
+}
+
+
+char	*eval_cmd(t_shell *shell, t_commands *cmd, char *cmd_tmp, int *dbl, int *sngl)
+{
+	int		cmd_length;
+
+	cmd_length = -1;
+	cmd_tmp = extract_command(cmd, cmd_tmp, &cmd_length, sngl, dbl);
+	if (!cmd_tmp)
+	{
+		shell->sucess = 0;
+		return (set_status(shell, 12), NULL);
 	}
 	if (!cmd->cmd_str)
 	{
 		shell->sucess = 0;;
 		return (set_status(shell, 12), NULL);
 	}
-	command_tmp_ptr = cmd_tmp;
-	cmd_tmp = ft_strtrim(cmd_tmp + cmd_length, " \t\b\r\v");
-	if (!cmd_tmp)
-	{
-		shell->sucess = 0;
-		return (ft_free(command_tmp_ptr), set_status(shell, 12), NULL);
-	}
-	return (ft_free(command_tmp_ptr), cmd_tmp);
+	return (cmd_tmp);
 }
 
 int	parse_redirection(t_shell *shell, t_commands *cmd, char *command)
@@ -126,10 +134,8 @@ int	parse_redirection(t_shell *shell, t_commands *cmd, char *command)
 	while (*cmd_tmp)
 	{
 		shell->sucess = 1;
-		if (*cmd_tmp == '\'')
-			sngl++;
-		if (*cmd_tmp == '"')
-			dbl++;
+		sngl += *cmd_tmp == '\'';
+		dbl += *cmd_tmp == '"';
 		if ((*cmd_tmp == '<' || *cmd_tmp == '>') && !(dbl % 2) && !(sngl % 2))
 			cmd_tmp = eval_red(shell, cmd, cmd_tmp);
 		else
@@ -141,6 +147,5 @@ int	parse_redirection(t_shell *shell, t_commands *cmd, char *command)
 		cmd->cmd_str = ft_strdup(command);
 	if (!cmd->cmd_str)
 		return (ft_free(cmd_tmp), 0);
-	// printf("my comamnd string here is %s\n", cmd->cmd_str);
 	return (ft_free(cmd_tmp), 1);
 }

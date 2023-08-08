@@ -41,3 +41,18 @@ void ft_lstadd_back_dollar(t_dollar **dollar_head, t_dollar *new_dollar)
 		current_dollar = current_dollar->next;
 	current_dollar->next = new_dollar;
 }
+
+void	ft_free_dollar(t_dollar **headref)
+{
+	t_dollar	*current;
+
+	if (!(*headref))
+		return ;
+	while (*headref)
+	{
+		current = *headref;
+		*headref = (*headref)->next;
+		ft_free(current->value);
+		ft_free(current);
+	}
+}
