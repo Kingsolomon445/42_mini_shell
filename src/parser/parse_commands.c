@@ -5,111 +5,148 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/08/07 17:46:54 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/07 17:50:35 by ofadahun         ###   ########.fr       */
+/*   Created: 2023/08/09 19:49:59 by ofadahun          #+#    #+#             */
+/*   Updated: 2023/08/09 20:36:12 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-static size_t	get_word_count(char *s, char c)
+static char	*ft_substitute(char *new_command, t_dollar **dollar_head)
 {
-	size_t	count;
-
-	count = 0;
-	while (*s)
+	t_dollar	*dollar;
+	size_t		len;
+	char		*found_dollar;
+	char		*final_command;
+	int			dollar_idx;
+	
+	final_command = NULL;
+	dollar_idx = 0;
+	while (*new_command)
 	{
-		if (*s != c)
+		found_dollar = ft_strchr(new_command, '$');
+		if (!found_dollar)
 		{
-			count++;
-			while ((*(++s) != c) && *s)
-				;
+			if (!final_command)
+				final_command = ft_strdup(new_command);
+			else
+				final_command = ft_strjoin(final_command, ft_strdup(new_command));
+			break;
+		}
+		
+		len = found_dollar - new_command;
+		if (len > 0)
+		{
+			if (!final_command)
+				final_command = ft_substr(new_command, 0, len);
+			else
+				final_command = ft_strjoin(final_command, ft_substr(new_command, 0, len));
+			new_command += len;
+		}
+		dollar = check_to_expand(dollar_head, dollar_idx);
+		if (dollar)
+		{
+			if (final_command)
+				final_command = ft_strjoin(final_command, dollar->value);
+			else
+				final_command = ft_strdup(dollar->value);
+			new_command ++;
 		}
 		else
-			s++;
-	}
-	return (count);
-}
-
-static int	make_command(char **res, char *start, \
-int letter_count, int word_index)
-{
-    char    *new_cmd;
-    char    *trimmed_cmd;
-
-    new_cmd = malloc(letter_count + 1);
-	res[word_index] = NULL;
-	if (!new_cmd)
-        return (ft_free_split(res), 0);
-	ft_strlcpy(new_cmd, start, letter_count + 1);
-    trimmed_cmd = ft_strtrim(new_cmd, " \n\t\b\v\f");
-    if (!*trimmed_cmd)
-        return (ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n"), ft_free(new_cmd), ft_free_split(res), 0);
-    res[word_index] = trimmed_cmd;
-	return (ft_free(new_cmd), 1);
-}
-
-char	**ft_split_commands(char const *s, char c, t_shell *shell)
-{
-	char	*str;
-	char	**res;
-	char	*start;
-	int		letter_count;
-	int		word_index;
-    int     s_quotes;
-	int		d_quotes;
-    int     pipes;
-
-	if (!s)
-		return (NULL);
-	str = (char *)s;
-	word_index = 0;
-    s_quotes = 0;
-	d_quotes = 0;
-    pipes = 0;
-	res = (char **)malloc((get_word_count(str, c) + 1) * sizeof(char *));
-	if (!res)
-        return (set_status(shell, 12), NULL);
-	while (*str)
-	{
-		letter_count = 0;
-		start = str;
-		while (*str && (*str != c || (s_quotes % 2) || (d_quotes % 2)))
 		{
-            s_quotes += (*str == '\'');
-			d_quotes += (*str == '"');
-			letter_count += (*str != c || (s_quotes % 2) || (d_quotes % 2));
-			str++;
-		}
-
-        if (letter_count == 0 && *str == c)
-		{
-            ft_printf_fd(2, "minishell: syntax error near unexpected token `|'\n");
-            set_status(shell, 258);
-            ft_free_split(res);
-            return NULL;
-        }
-
-		if (letter_count > 0)
-		{
-            pipes += (*str == c);
-            str += (*str == c);
-			if (!make_command(res, start, letter_count, word_index))
+			found_dollar = ft_strchr(new_command + 1, '$');
+			if (!found_dollar)
 			{
-                set_status(shell, 12);
-                return NULL;
-            }
-            word_index++;
+				if (!final_command)
+					final_command = ft_strdup(new_command);
+				else
+					final_command = ft_strjoin(final_command, ft_strdup(new_command));
+				break;
+			}
+			len = found_dollar - new_command;
+			if (final_command)
+				final_command = ft_strjoin(final_command, ft_substr(new_command, 0, len));
+			else
+				final_command = ft_substr(new_command, 0, len);
+			new_command += len;
 		}
-
-		if (*str)
-			str++;
+		dollar_idx++;
 	}
-	*(res + word_index) = NULL;
-    if (count_commands(res) != pipes + 1 && pipes)
-    {
-        *(res + word_index) = readline("> ");
-        *(res + word_index + 1) = NULL;
+	return (final_command);
+}
+
+t_commands *parse_commands(t_shell *shell, char *old_command)
+{
+    char *command;
+	char	quote;
+    char new_command[ft_strlen(old_command) + 1];
+    int i;
+	int j;
+	int dollar_idx;
+	t_token_pos *token_pos;
+	t_redirection	*redirection;
+	t_dollar	*dollar;
+	t_commands	*cmd;
+
+	command = ft_strtrim(old_command, " \v\f\t\n\b");
+	dollar = NULL;
+	i = 0;
+	j = 0;
+	dollar_idx = 0;
+	redirection = NULL;
+	token_pos = NULL;
+    while (command[i])
+	{
+        if (command[i] == '\'' || command[i] == '"')
+		{
+            quote = command[i++];
+            while (command[i] && command[i] != quote)
+			{
+				new_command[j++] = command[i++];
+                if (command[i - 1] == '$')
+				{
+					if (quote == '"' && command[i] && command[i] != '"' && (ft_isalnum(command[i]) || ft_strchr("_?'", command[i])))
+                    	expand(shell, command + i, &i, &dollar, dollar_idx);
+                    dollar_idx++;
+                }
+            }
+			if (command[i])
+            	i++;
+        }
+		else if (command[i] == '$')
+		{
+			new_command[j++] = command[i++];
+			if (command[i] && (ft_isalnum(command[i]) || ft_strchr("_?\"'", command[i])))
+            	expand(shell, command + i, &i, &dollar, dollar_idx);
+            dollar_idx++;
+        }
+		else if (ft_strchr("><", command[i]))
+		{
+			parse_redirection(&redirection, &i, command + i);
+		}
+		else
+		{
+            new_command[j++] = command[i++];
+			while (command[i] && ft_strchr(" \v\t\f\b\n", command[i]) && ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
+			{
+				i++;
+			}
+			// if (ft_strchr(" \v\t\f\b\n", new_command[j - 1]) && ft_setsinstr(" \v\t\f\b\n", command + i))
+			// {
+			// 	ft_lstadd_back_tokenpos(&token_pos, ft_lstnew_tokenpos(j - 1));
+			// }
+			if (ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
+			{
+				ft_lstadd_back_tokenpos(&token_pos, ft_lstnew_tokenpos(j - 1));
+			}
+			
+		}
     }
-	return (res);
+    new_command[j] = '\0';
+	if (ft_strchr(new_command, '$'))
+    	command = ft_substitute(new_command, &dollar);
+	else
+		command = ft_strdup(new_command);
+	cmd = ft_lstnew_cmd(shell, dollar, redirection, token_pos, command);
+	return (cmd);
 }

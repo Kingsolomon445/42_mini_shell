@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:16:01 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/08 17:51:01 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/09 20:24:28 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,28 +39,6 @@ typedef struct s_redirection
 	struct s_redirection	*next;
 }	t_redirection;
 
-typedef struct s_eval_red_vars
-{
-	t_redirection	*new_red;
-	char			*cmd_tmpptr;
-	int				fname_len;
-	int				delim_len;
-	char			red_type;
-	int				fd;
-}	t_eval_red_vars;
-
-typedef struct s_commands
-{
-	char				**toks;
-	char				*red_str;
-	char				*cmd_str;
-	char				*cmd_type;
-	int					fds[2];
-	char				*vbin;
-	int					cmd_pos;
-	t_redirection		*red;
-	struct s_commands	*next;
-}	t_commands;
 
 typedef struct s_dollar
 {
@@ -70,6 +48,28 @@ typedef struct s_dollar
 	struct s_dollar	*next;
 
 }	t_dollar;
+
+typedef struct s_token_pos
+{
+	int	index;
+	struct s_token_pos	*next;
+	
+} t_token_pos;
+
+typedef struct s_commands
+{
+	char				**toks;
+	char				*command;
+	char				*cmd_type;
+	int					fds[2];
+	char				*vbin;
+	int					cmd_pos;
+	t_redirection		*red;
+	t_dollar		*dollar;
+	t_token_pos		*token_pos;
+	struct s_commands	*next;
+}	t_commands;
+
 
 typedef struct s_create_tokens
 {
@@ -99,29 +99,25 @@ typedef struct s_shell
 	int			red_status;
 	t_dollar		*dollar_head;
 	t_commands	*cmd_head;
-	t_create_tokens	*tok_var;
+	t_token_pos	*token_pos;
 	t_list		*hist_head;
 }	t_shell;
 
 
+char	**create_tokens(const char *delims, t_commands *cmd);
+void	parse_shell(t_shell *shell);
+t_commands *parse_commands(t_shell *shell, char *old_command);
+void	parse_redirection(t_redirection **redirection,  int *i, char *input);
+void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dollar_idx);
+t_dollar	*check_to_expand(t_dollar **dollar_head, int idx);
+
+int	ft_setsinstr(char *sets, char *rem_input);
 
 //PARSERS
 
 //PARSE INPUT
-void	parse_input(t_shell *shell);
+int	open_fd(char *file_name, char red_type);
 
-//PARSE COMMANDS
-char	**ft_split_commands(char const *s, char c, t_shell *shell);
-
-//TOKENIZATION
-char	**create_tokens(char *str, const char *delims);
-
-//REDIRECTIONS
-int	handle_redirections(t_commands *cmd);
-int	parse_redirection(t_shell *shell, t_commands *cmd, char *command);
-//REDIRECTION UTILS
-int	extract_file(t_shell *shell, char *cmd_tmp, char red_type, int *fname_len);
-int	extract_delimiter(t_shell *shell, char *cmd_tmp, int *delim_len);
 
 //PROCESS && EXECUTORS
 void	run_commands(t_shell *shell);
@@ -199,9 +195,12 @@ void    set_status(t_shell *shell, int status);
 //LINKED LISTS
 t_redirection	*ft_lstnew_red(int red_type, int fd);
 void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red);
-t_commands	*ft_lstnew_cmd(char *command, t_shell *shell, int cmd_pos);
+t_commands	*ft_lstnew_cmd(t_shell *shell, t_dollar *dollar, t_redirection *red, t_token_pos *token_pos, char *command);
 void	ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd);
 t_dollar *ft_lstnew_dollar(int index, char *value);
 void ft_lstadd_back_dollar(t_dollar **dollar_head, t_dollar *new_dollar);
+t_token_pos  *ft_lstnew_tokenpos(int index);
+void ft_lstadd_back_tokenpos(t_token_pos **token_pos_head, t_token_pos *new_token_pos);
+void	ft_free_tokenpos(t_token_pos **token_pos);
 
 #endif

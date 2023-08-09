@@ -1,40 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   list_utils_one.c                                   :+:      :+:    :+:   */
+/*   parse_commands_list.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/07 17:29:01 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/09 20:23:52 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-t_commands	*ft_lstnew_cmd(char *command, t_shell *shell, int cmd_pos)
+t_commands	*ft_lstnew_cmd(t_shell *shell, t_dollar *dollar, t_redirection *red, t_token_pos *token_pos, char *command)
 {
 	t_commands	*cmd;
 
 	cmd = malloc(sizeof(t_commands));
 	if (!cmd)
 		return (NULL);
-	cmd->next = NULL;
-	cmd->red = NULL;
-	shell->red_status = parse_redirection(shell, cmd, command);
-	if (shell->red_status != 1)
-		return (NULL);
-	if (!cmd->cmd_str)
-		return (NULL);
-	cmd->toks = create_tokens(cmd->cmd_str, " \n\r\f\v\t");
-	if (!cmd->toks)
-		return (NULL);
-	if (!cmd->toks)
-		return (NULL);
+	cmd->dollar = dollar;
+	cmd->red = red;
+	cmd->token_pos = token_pos;
+	cmd->command = command;
+	cmd->toks = create_tokens(" \v\f\t\b\n\r", cmd);
 	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
-	if (!cmd->vbin)
-		return (NULL);
-	cmd->cmd_pos = cmd_pos;
+	cmd->next = NULL;
+	cmd->cmd_pos = shell->no_cmds - 1;
 	return (cmd);
 }
 
@@ -65,10 +57,12 @@ void	ft_free_cmds(t_commands **cmd_head)
 	{
 		current = *cmd_head;
 		*cmd_head = (*cmd_head)->next;
+		ft_free_dollar(&current->dollar);
+		ft_free_red(&current->red);
+		ft_free_tokenpos(&current->token_pos);
 		ft_free_split(current->toks);
+		ft_free(current->command);
 		ft_free(current->vbin);
-		ft_free(current->cmd_str);
-		ft_free_red(&(current->red));
 		ft_free(current);
 	}
 }

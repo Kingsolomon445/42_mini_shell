@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:13:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/08 17:52:04 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/09 20:25:26 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,22 @@
 // Unset needs to handle multiple arguments  ===== done
 // need to handle when pipe is inside quoted strings
 //ls > tmp/file gives malloc error
+
+//echo ""$?""   ==== done
+// echo "exit_code ->$? user ->$USER home -> $HOME"
+// echo $"42$"    ==== done
+// echo "$ "
+// echo hi >./outfiles/outfile01 | echo bye
+// echo <123 <456 hi | echo 42
+// echo "$?"
+// echo "'$?'"
+// escape backslash
+// echo "cat lol.c | cat > lol.c"
+// echo '$USER' "$USER" "text  ' text"
+// echo " '$USER' " spaces in quotes
+// echo '              $USER          '
+// echo $USER$TESTNOTFOUND$HOME$
+// echo $USER$TESTNOTFOUND$HOME$WTF$PWD
 
 static int	take_input(t_shell *shell)
 {
@@ -79,35 +95,6 @@ static int	init_shell(t_shell *shell)
 	return (update_env_item(shell, "SHLVL", new_level), ft_free(new_level), 1);
 }
 
-int	parse_commands(t_shell *shell)
-{
-	int			cmd_pos;
-	char		**commands;
-	t_commands	*new;
-
-	cmd_pos = 0;
-	commands = ft_split_commands(shell->input, '|', shell);
-	if (!commands)
-		return (0);
-	shell->no_cmds = count_commands(commands);
-	while (commands[cmd_pos])
-	{
-		new = ft_lstnew_cmd(commands[cmd_pos], shell, cmd_pos + 1);
-		if (shell->red_status < 0)
-		{
-			shell->last_status = 258;
-			if (shell->red_status == -1)
-				shell->last_status = 127;
-			return (ft_free(new), ft_free_split(commands), 0);
-		}
-		if (!new)
-			return (ft_free_split(commands), 0);
-		ft_lstadd_back_cmd(&(shell->cmd_head), new);
-		cmd_pos++;
-	}
-	return (ft_free_split(commands), 1);
-}
-
 int	main(void)
 {
 	t_shell			*shell;
@@ -123,14 +110,12 @@ int	main(void)
 	shell->dollar_head = NULL;
 	while (1)
 	{
+		shell->token_pos = NULL;
 		if (take_input(shell))
 			continue ;
 		add_history(shell->input);
-		parse_input(shell);
-		if (parse_commands(shell))
-			run_commands(shell);
-		ft_free_dollar(&shell->dollar_head);
-		shell->dollar_head = NULL;
+		parse_shell(shell);
+		run_commands(shell);
 		ft_free_for_next_read(shell);
 	}
 	ft_free_shell(shell);

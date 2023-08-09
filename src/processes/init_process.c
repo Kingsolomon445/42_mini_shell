@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_process.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:20:12 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/06 16:37:29 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/09 20:26:14 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,8 +147,8 @@ void	ft_exec_in_child_process(t_commands *cmd)
 	int			sucess;
 
 	sucess = 1;
-	if (cmd->red)
-		sucess = handle_redirections(cmd);
+	// if (cmd->red)
+	// 	sucess = handle_redirections(cmd);
 	if (!sucess)
 	{
 		// perror("dup");
@@ -185,7 +185,6 @@ void	run_commands(t_shell *shell)
 
 	cur_cmd = shell->cmd_head;
 	original_stdout = dup(STDOUT_FILENO);
-	// set_terminal_settings();
 	if (shell->no_cmds == 1)
 	{
 		if (is_it_builtin(shell->builtins, cur_cmd->toks[0]))
@@ -195,7 +194,6 @@ void	run_commands(t_shell *shell)
 	}
 	else
 		run_processes(shell->cmd_head, shell, shell->cmd_head->fds);
-	// reset_terminal_settings();
 	close(STDOUT_FILENO);
 	dup2(original_stdout, STDOUT_FILENO);
 	close(original_stdout);
