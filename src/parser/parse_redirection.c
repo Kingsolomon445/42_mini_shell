@@ -30,6 +30,7 @@ void	parse_redirection(t_redirection **redirection,  int *i, char *input)
 {
 	char	red_type;
 	char	*file;
+	// char	*delimeter;
 	int		j;
 	int		fd;
 	int		start;
@@ -50,11 +51,11 @@ void	parse_redirection(t_redirection **redirection,  int *i, char *input)
 	while(!ft_strchr(" \t\b\v\n", input[j]))
 		j++;
 	(*i) += j;
-	file = ft_substr(input, start, j - start);
-	// printf("input after this is: %s\n", input + j);
-	// printf("file here == %s\n", file);
-	fd = open_fd(file, red_type);
-	red = ft_lstnew_red(red_type, fd);
-	ft_lstadd_back_red(redirection, red);
-	// printf("fd value here is %d\n", fd);
+	if (red_type != HEREDOC)
+	{
+		file = ft_substr(input, start, j - start);
+		fd = open_fd(file, red_type);
+		red = ft_lstnew_red(red_type, fd);
+		ft_lstadd_back_red(redirection, red);
+	}
 }

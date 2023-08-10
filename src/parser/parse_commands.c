@@ -12,67 +12,65 @@
 
 #include "../../include/minishell.h"
 
-static char	*ft_substitute(char *new_command, t_dollar **dollar_head)
+char	*ft_substitute(char *new_token, t_dollar **dollar_head, int *dollar_idx)
 {
 	t_dollar	*dollar;
 	size_t		len;
 	char		*found_dollar;
-	char		*final_command;
-	int			dollar_idx;
+	char		*final_token;
 	
-	final_command = NULL;
-	dollar_idx = 0;
-	while (*new_command)
+	final_token = NULL;
+	while (*new_token)
 	{
-		found_dollar = ft_strchr(new_command, '$');
+		found_dollar = ft_strchr(new_token, '$');
 		if (!found_dollar)
 		{
-			if (!final_command)
-				final_command = ft_strdup(new_command);
+			if (!final_token)
+				final_token = ft_strdup(new_token);
 			else
-				final_command = ft_strjoin(final_command, ft_strdup(new_command));
+				final_token = ft_strjoin(final_token, ft_strdup(new_token));
 			break;
 		}
 		
-		len = found_dollar - new_command;
+		len = found_dollar - new_token;
 		if (len > 0)
 		{
-			if (!final_command)
-				final_command = ft_substr(new_command, 0, len);
+			if (!final_token)
+				final_token = ft_substr(new_token, 0, len);
 			else
-				final_command = ft_strjoin(final_command, ft_substr(new_command, 0, len));
-			new_command += len;
+				final_token = ft_strjoin(final_token, ft_substr(new_token, 0, len));
+			new_token += len;
 		}
-		dollar = check_to_expand(dollar_head, dollar_idx);
+		dollar = check_to_expand(dollar_head, *dollar_idx);
 		if (dollar)
 		{
-			if (final_command)
-				final_command = ft_strjoin(final_command, dollar->value);
+			if (final_token)
+				final_token = ft_strjoin(final_token, dollar->value);
 			else
-				final_command = ft_strdup(dollar->value);
-			new_command ++;
+				final_token = ft_strdup(dollar->value);
+			new_token ++;
 		}
 		else
 		{
-			found_dollar = ft_strchr(new_command + 1, '$');
+			found_dollar = ft_strchr(new_token + 1, '$');
 			if (!found_dollar)
 			{
-				if (!final_command)
-					final_command = ft_strdup(new_command);
+				if (!final_token)
+					final_token = ft_strdup(new_token);
 				else
-					final_command = ft_strjoin(final_command, ft_strdup(new_command));
+					final_token = ft_strjoin(final_token, ft_strdup(new_token));
 				break;
 			}
-			len = found_dollar - new_command;
-			if (final_command)
-				final_command = ft_strjoin(final_command, ft_substr(new_command, 0, len));
+			len = found_dollar - new_token;
+			if (final_token)
+				final_token = ft_strjoin(final_token, ft_substr(new_token, 0, len));
 			else
-				final_command = ft_substr(new_command, 0, len);
-			new_command += len;
+				final_token = ft_substr(new_token, 0, len);
+			new_token += len;
 		}
-		dollar_idx++;
+		(*dollar_idx)++;
 	}
-	return (final_command);
+	return (final_token);
 }
 
 t_commands *parse_commands(t_shell *shell, char *old_command)
@@ -121,32 +119,23 @@ t_commands *parse_commands(t_shell *shell, char *old_command)
             dollar_idx++;
         }
 		else if (ft_strchr("><", command[i]))
-		{
 			parse_redirection(&redirection, &i, command + i);
-		}
 		else
 		{
-            new_command[j++] = command[i++];
-			while (command[i] && ft_strchr(" \v\t\f\b\n", command[i]) && ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
-			{
+			if (command[i] == '\\')
 				i++;
-			}
-			// if (ft_strchr(" \v\t\f\b\n", new_command[j - 1]) && ft_setsinstr(" \v\t\f\b\n", command + i))
-			// {
-			// 	ft_lstadd_back_tokenpos(&token_pos, ft_lstnew_tokenpos(j - 1));
-			// }
-			if (ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
+			if (command[i])
 			{
-				ft_lstadd_back_tokenpos(&token_pos, ft_lstnew_tokenpos(j - 1));
+				new_command[j++] = command[i++];
+				while (command[i] && ft_strchr(" \v\t\f\b\n", command[i]) && ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
+					i++;
+				if (ft_strchr(" \v\t\f\b\n", new_command[j - 1]))
+					ft_lstadd_back_tokenpos(&token_pos, ft_lstnew_tokenpos(j - 1));
 			}
-			
 		}
     }
     new_command[j] = '\0';
-	if (ft_strchr(new_command, '$'))
-    	command = ft_substitute(new_command, &dollar);
-	else
-		command = ft_strdup(new_command);
+	command = ft_strdup(new_command);
 	cmd = ft_lstnew_cmd(shell, dollar, redirection, token_pos, command);
 	return (cmd);
 }

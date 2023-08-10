@@ -90,6 +90,7 @@ typedef struct s_shell
 	char		**path;
 	char		**env;
 	char		**builtins;
+	char		**commands;
 	char		*welcome_str;
 	char		*input;
 	int			last_status;
@@ -104,12 +105,13 @@ typedef struct s_shell
 }	t_shell;
 
 
-char	**create_tokens(const char *delims, t_commands *cmd);
+char	**create_tokens(t_commands *cmd);
 void	parse_shell(t_shell *shell);
 t_commands *parse_commands(t_shell *shell, char *old_command);
 void	parse_redirection(t_redirection **redirection,  int *i, char *input);
 void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dollar_idx);
 t_dollar	*check_to_expand(t_dollar **dollar_head, int idx);
+char	*ft_substitute(char *new_command, t_dollar **dollar_head, int *dollar_idx);
 
 int	ft_setsinstr(char *sets, char *rem_input);
 
@@ -128,13 +130,10 @@ void	ft_exec_in_child_process(t_commands *cmd);
 
 //UTILS
 int		count_ocurrence(char *str, char ch);
-int		count_commands(char **commands);
 int		compare_cmd(char *src, char *dst);
 int		compare_builtin(char *src, char *dst);
 void	ft_putenv(t_shell *shell, char *new_env);
-int		count_tokens(char *str, const char *delims);
 char	*get_valid_bin(t_shell *shell, char *cmd);
-char	*ft_increment(char *str, const char *delims);
 char	**get_path_from_env(char **env);
 char	**get_final_path(void);
 char	*ft_getenv(char **env, char *env_title);

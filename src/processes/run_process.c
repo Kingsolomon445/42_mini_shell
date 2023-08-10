@@ -36,6 +36,7 @@ void    run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 {
     extern char	**environ;
 
+	printf("cmdpos == %d, nocmds == %d\n", cmd->cmd_pos, shell->no_cmds);
     if (cmd->cmd_pos == 1)
         shell->sucess = ft_dup(cmd->fds, 0);
     else if (cmd->cmd_pos == shell->no_cmds)

@@ -21,23 +21,23 @@ void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dol
 
 	len = 0;
 	if (ft_isdigit(input[len]))
-	{
 		len++;
-	}
 	else if (!ft_strchr("\"'", input[len]))
 	{
-		while(input[len] && !ft_strchr(" \t\b\v\f\"'", input[len]))
+		while(input[len] && ft_isalnum(input[len]))
 			len++;
 	}
 	env_title = ft_substr(input, 0, len);
 	if (compare_cmd("?", env_title))
 		env_value = ft_itoa(shell->last_status);
 	else
+	{
 		env_value = getenv(env_title);
-	if (env_value)
-		env_value = ft_strdup(env_value);
-	else
-		env_value = ft_strdup("");
+		if (env_value)
+			env_value = ft_strdup(env_value);
+		else
+			env_value = ft_strdup("");
+	}
 	dollar = ft_lstnew_dollar(dollar_idx, env_value);
 	ft_lstadd_back_dollar(dollar_head, dollar);
 	*i += len;

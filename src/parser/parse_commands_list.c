@@ -23,10 +23,10 @@ t_commands	*ft_lstnew_cmd(t_shell *shell, t_dollar *dollar, t_redirection *red, 
 	cmd->red = red;
 	cmd->token_pos = token_pos;
 	cmd->command = command;
-	cmd->toks = create_tokens(" \v\f\t\b\n\r", cmd);
+	cmd->toks = create_tokens(cmd);
 	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
+	cmd->cmd_pos = shell->no_cmds;
 	cmd->next = NULL;
-	cmd->cmd_pos = shell->no_cmds - 1;
 	return (cmd);
 }
 
