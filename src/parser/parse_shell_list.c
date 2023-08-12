@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   list_utils_two.c                                   :+:      :+:    :+:   */
+/*   parse_shell_list.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:26:11 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/08 17:51:22 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 16:44:53 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,47 @@ void	ft_free_dollar(t_dollar **headref)
 		current = *headref;
 		*headref = (*headref)->next;
 		ft_free(current->value);
+		ft_free(current);
+	}
+}
+
+t_cmd_pos  *ft_lstnew_cmdpos(int index)
+{
+	t_cmd_pos *cmd_pos;
+
+	cmd_pos = malloc(sizeof(t_token_pos));
+	cmd_pos->index = index;
+	cmd_pos->next = NULL;
+	return (cmd_pos);
+}
+
+void ft_lstadd_back_cmdpos(t_cmd_pos **cmd_pos_head, t_cmd_pos *new_cmd_pos)
+{
+	t_cmd_pos	*cur_cmd_pos;
+
+	if (!new_cmd_pos)
+		return ;
+	if (!(*cmd_pos_head))
+	{
+		*cmd_pos_head = new_cmd_pos;
+		return ;
+	}
+	cur_cmd_pos = *cmd_pos_head;
+	while (cur_cmd_pos->next)
+		cur_cmd_pos = cur_cmd_pos->next;
+	cur_cmd_pos->next = new_cmd_pos;
+}
+
+void	ft_free_cmdpos(t_cmd_pos **cmd_pos)
+{
+	t_cmd_pos	*current;
+
+	if (!(*cmd_pos))
+		return ;
+	while (*cmd_pos)
+	{
+		current = *cmd_pos;
+		*cmd_pos = (*cmd_pos)->next;
 		ft_free(current);
 	}
 }

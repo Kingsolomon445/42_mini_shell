@@ -6,26 +6,27 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/09 20:23:52 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 16:54:51 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-t_commands	*ft_lstnew_cmd(t_shell *shell, t_dollar *dollar, t_redirection *red, t_token_pos *token_pos, char *command)
+t_commands	*ft_lstnew_cmd(t_shell *shell, t_parse_commands_vars *vars)
 {
 	t_commands	*cmd;
 
 	cmd = malloc(sizeof(t_commands));
 	if (!cmd)
 		return (NULL);
-	cmd->dollar = dollar;
-	cmd->red = red;
-	cmd->token_pos = token_pos;
-	cmd->command = command;
+	cmd->dollar = vars->dollar;
+	cmd->red = vars->redirection;
+	cmd->token_pos = vars->token_pos;
+	cmd->command = vars->command;
 	cmd->toks = create_tokens(cmd);
 	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
 	cmd->cmd_pos = shell->no_cmds;
+	cmd->do_not_run = shell->do_not_run;
 	cmd->next = NULL;
 	return (cmd);
 }

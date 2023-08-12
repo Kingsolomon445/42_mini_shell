@@ -6,26 +6,11 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:40:18 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/07 17:45:21 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-char	*ft_increment(char *str, const char *delims)
-{
-	char	*tmp;
-
-	tmp = str;
-	while (*tmp)
-	{
-		if (ft_strchr(delims, *tmp))
-			tmp++;
-		else
-			break ;
-	}
-	return (tmp);
-}
 
 int	count_ocurrence(char *str, char ch)
 {
@@ -43,42 +28,7 @@ int	count_ocurrence(char *str, char ch)
 	return (occ);
 }
 
-int	count_commands(char **commands)
-{
-	int	i;
-
-	i = 0;
-	while(commands[i])
-		i++;
-	return (i);
-}
-
-int	count_tokens(char *str, const char *delims)
-{
-	int		count;
-	char	*tmp;
-	int		found_delim;
-
-	count = 0;
-	tmp = str;
-	found_delim = 0;
-	if (ft_strchr(delims, *tmp))
-		tmp = ft_increment(tmp, delims);
-	while (*tmp)
-	{
-		tmp++;
-		if (ft_strchr(delims, *tmp))
-		{
-			tmp = ft_increment(tmp, delims);
-			found_delim = 1;
-		}
-		if (found_delim && *tmp)
-			count++;
-	}
-	return (count + 1);
-}
-
-int	compare_cmd(char *src, char *dst)
+int	compare_str(char *src, char *dst)
 {
 	int	i;
 

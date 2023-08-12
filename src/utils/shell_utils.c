@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:54:25 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/07 17:53:47 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,12 +34,22 @@ void	print_history(t_shell *shell)
 	index = 0;
 	if (!shell->hist_head)
 		return ;
-	temp = shell->hist_head;
-	while (temp)
+	if (shell->cmd_head->toks[1] && compare_str("-c", shell->cmd_head->toks[1]))
 	{
-		printf("%5d	%s\n", index + 1, (char *)temp->content);
-		temp = temp->next;
-		index++;
+		ft_free_lst(&shell->hist_head);
+		rl_clear_history();
+		shell->last_status = 0;
+	}
+	else
+	{
+		temp = shell->hist_head;
+		while (temp)
+		{
+			printf("%5d	%s\n", index + 1, (char *)temp->content);
+			temp = temp->next;
+			index++;
+		}
+		shell->last_status = 0;
 	}
 }
 
@@ -72,27 +82,29 @@ void    set_status(t_shell *shell, int status)
     shell->last_status = status;
 }
 
-int	run_here_doc(char *limiter)
+int	ft_putenv(t_shell *shell, char *new_env)
 {
-	int		heredoc;
-	char	*str;
+	extern char		**environ;
+	int				array_len;
+	char			**result;
+	int				i;
 
-	heredoc = open("here_doc", O_RDWR | O_CREAT | O_TRUNC, 0644);
-	if (heredoc == -1)
+	i = 0;
+	array_len = env_len(shell->env);
+	result = (char **)malloc((array_len + 2) * sizeof(char *));
+	if (!result)
+		return (0);
+	while (shell->env[i])
 	{
-		ft_printf_fd(2, "pipex: %s: %s\n", strerror(errno), "here_doc");
-		return (-1);
+		result[i] = shell->env[i];
+		i++;
 	}
-	str = readline(">");
-	while (str && compare_cmd(str, limiter) != 1)
-	{
-		ft_putstr_fd(str, heredoc);
-		ft_putstr_fd("\n", heredoc);
-		ft_free(str);
-		str = readline(">");
-	}
-	ft_free(str);
-	return (open("here_doc", O_RDONLY));
+	result[i] = new_env;
+	result[++i] = NULL;
+	ft_free(environ);
+	environ = result;
+	shell->env = environ;
+	return (1);
 }
 
 void	ft_exit_shell(t_shell *shell, long status)

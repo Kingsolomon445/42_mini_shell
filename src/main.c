@@ -6,118 +6,166 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:13:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/09 20:25:26 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:52:56 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-// We need to handle an occasion whereby redirection/heredoc doesnt have a file or an argument. ===== done
-// We still need a welcome string or welcome ascii art
-// Need to handle echo $$
-// Need to escape backslash
-// Unset needs to handle multiple arguments  ===== done
-// need to handle when pipe is inside quoted strings
-//ls > tmp/file gives malloc error
+// ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la > > out | cat << stop3
+// We need to handle when a command starts with /
+// export PATH=""  in this case for example commands shouldnt work
+// unset dont wokr eitehr
 
-//echo ""$?""   ==== done
-// echo "exit_code ->$? user ->$USER home -> $HOME"
-// echo $"42$"    ==== done
-// echo "$ "
-// echo hi >./outfiles/outfile01 | echo bye
-// echo <123 <456 hi | echo 42
-// echo "$?"
-// echo "'$?'"
-// escape backslash
-// echo "cat lol.c | cat > lol.c"
-// echo '$USER' "$USER" "text  ' text"
-// echo " '$USER' " spaces in quotes
-// echo '              $USER          '
-// echo $USER$TESTNOTFOUND$HOME$
-// echo $USER$TESTNOTFOUND$HOME$WTF$PWD
+
+int	init_prompt_title(t_shell *shell)
+{
+	char *holder;
+	
+	if (getenv("USER"))
+	{
+		holder = ft_strjoin(getenv("USER"), "@minishell$ ");
+		if (!holder)
+			return (0);
+	}
+	else
+	{
+		holder = ft_strjoin("guest", "@minishell$ ");
+		if (!holder)
+			return (0);
+	}
+	shell->success_prompt = ft_strjoin("🟢", holder);
+	if (!shell->success_prompt)
+		return (ft_free(holder), 0);
+	shell->failed_prompt = ft_strjoin("🔴", holder);
+	if (!shell->failed_prompt)
+		return (ft_free(holder), 0);
+	return (ft_free(holder), 1);
+}
 
 static int	take_input(t_shell *shell)
 {
 	char	*content;
 	t_list	*new;
 
-	// shell->input = readline(shell->welcome_str);
-	if (isatty(fileno(stdin)))
-		shell->input = readline(shell->welcome_str);
+	if (!shell->last_status)
+		shell->welcome_str = shell->success_prompt;
 	else
-	{
-		char *line;
-		line = get_next_line(fileno(stdin));
-		shell->input = ft_strtrim(line, "\n");
-		free(line);
-	}
+		shell->welcome_str = shell->failed_prompt;
+	shell->input = readline(shell->welcome_str);
+	// if (isatty(fileno(stdin)))
+	// 	shell->input = readline(shell->welcome_str);
+	// else
+	// {
+	// 	char *line;
+	// 	line = get_next_line(fileno(stdin));
+	// 	shell->input = ft_strtrim(line, "\n");
+	// 	free(line);
+	// }
 	if (!shell->input)
-		ft_exit_shell(shell, EXIT_FAILURE);
+		return (1);
 	if (*shell->input)
 	{	
 		content = ft_strdup(shell->input);
 		if (!content)
-			ft_exit_shell(shell, EXIT_FAILURE);
+			return (-1);
 		new = ft_lstnew(content);
 		if (!new)
-		{
-			ft_free(content);
-			ft_exit_shell(shell, EXIT_FAILURE);
-		}
-		ft_lstadd_back(&(shell->hist_head), new);
+			return (ft_free(content), -1);
+		if (!shell->hist_head)
+			shell->hist_head = new;
+		else
+			ft_lstadd_back(&(shell->hist_head), new);
 		return (0);
 	}
-	return (ft_free(shell->input), 1);
+	return (ft_free(shell->input), -1);
 }
+
 
 static int	init_shell(t_shell *shell)
 {
 	char	*new_level;
-	int		level;
 
 	shell->cmd_head = NULL;
 	shell->hist_head = NULL;
 	shell->input = NULL;
-	shell->welcome_str = ft_strjoin(getenv("USER"), "@minishell$ ");
+	shell->commands = NULL;
+	shell->cmd_pos_head = NULL;
+	shell->sucess = 1;
+	if (!init_prompt_title(shell))
+		return (0);
+	shell->welcome_str = shell->success_prompt;
 	shell->path = get_final_path();
 	shell->builtins = \
 	ft_split("echo cd pwd export unset env exit history", ' ');
+	if (!shell->builtins || !shell->path || !shell->welcome_str)
+		return (0);
 	shell->last_status = 0;
-	init_shellenv(shell);
+	if (!init_shellenv(shell))
+		return (0);
 	if (!getenv("SHLVL"))
 	{
-		level = 1;
 		ft_putenv(shell, ft_strdup("SHLVL=1"));
+		new_level = ft_strdup("1");
 	}
 	else
-		level = ft_atoi(getenv("SHLVL")) + 1;
-	new_level = ft_itoa(level);
+		new_level = ft_itoa(ft_atoi(getenv("SHLVL")) + 1);
+	if (!new_level)
+		return (0);
 	return (update_env_item(shell, "SHLVL", new_level), ft_free(new_level), 1);
+}
+
+static	void	init_shell_for_next_read(t_shell *shell)
+{
+	shell->cmd_head = NULL;
+	shell->hist_head = NULL;
+	shell->input = NULL;
+	shell->commands = NULL;
+	shell->cmd_pos_head = NULL;
+	shell->sucess = 1;
+}
+
+void	printf_welcome(void)
+{
+	ft_printf_fd(1, "*************************************************************************\n");
+	ft_printf_fd(1, "\t\t\t🌟Welcome to 42 MiniShell🌟\n");
+	ft_printf_fd(1, "\t\t    Developed by: @ofadahun & @sbhatta\n");
+	if (getenv("SHLVL"))
+		ft_printf_fd(1, "\t\t\t💡Current Shell Level: %s\n", getenv("SHLVL"));
+	if (getenv("USER"))
+		ft_printf_fd(1, "\t\t\t 💁Current User: %s\n", getenv("USER"));
+	else
+		ft_printf_fd(1, "\t\t\t 💁Current User: %s\n", "guest");
+	ft_printf_fd(1, "*************************************************************************\n");
 }
 
 int	main(void)
 {
 	t_shell			*shell;
+	int				status;
+	int				input_sucess;
 
+	status = 0;
 	ignore_signal();
 	set_signal_act();
 	// atexit(&checkleaks);
 	shell = malloc(sizeof(t_shell));
 	if (!shell)
-		return (-1);
-	shell->red_status = 1;
+		exit(12);
 	init_shell(shell);
-	shell->dollar_head = NULL;
 	while (1)
 	{
-		shell->token_pos = NULL;
-		if (take_input(shell))
+		input_sucess = take_input(shell);
+		if (input_sucess == 1)
+			exit(shell->last_status);
+		else if (input_sucess == -1)
 			continue ;
 		add_history(shell->input);
-		parse_shell(shell);
-		run_commands(shell);
+		if (parse_shell(shell))
+			run_commands(shell);
+		status = shell->last_status;
 		ft_free_for_next_read(shell);
+		init_shell_for_next_read(shell);
 	}
-	ft_free_shell(shell);
-	return (0);
+	return (ft_free_shell(shell), status);
 }

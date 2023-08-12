@@ -6,17 +6,17 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:26:40 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/04 17:52:05 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 17:11:50 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/minishell.h"
+#include	"../../include/minishell.h"
 
-int    ft_dup(int fds[2], int in)
+int	ft_dup(int fds[2], int in)
 {
 	if (in)
 	{
-   		close(fds[1]);
+		close(fds[1]);
 		if (dup2(fds[0], STDIN_FILENO) == -1)
 			return (0);
 		close(fds[0]);
@@ -31,47 +31,51 @@ int    ft_dup(int fds[2], int in)
 	return (1);
 }
 
-
-void    run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
+void	run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 {
-    extern char	**environ;
-
-	printf("cmdpos == %d, nocmds == %d\n", cmd->cmd_pos, shell->no_cmds);
-    if (cmd->cmd_pos == 1)
-        shell->sucess = ft_dup(cmd->fds, 0);
-    else if (cmd->cmd_pos == shell->no_cmds)
-        shell->sucess = ft_dup(fds, 1);
-    else
-    {
-       shell->sucess = ft_dup(fds, 1);
+	if (cmd->cmd_pos == 1)
+		shell->sucess = ft_dup(cmd->fds, 0);
+	else if (cmd->cmd_pos == shell->no_cmds)
+		shell->sucess = ft_dup(fds, 1);
+	else
+	{
+		shell->sucess = ft_dup(fds, 1);
 		if (!shell->sucess)
-			exit(errno);
+		{
+			perror("dup");
+			exit(1);
+		}
 		else
-        	shell->sucess = ft_dup(cmd->fds, 0);
-    }
+			shell->sucess = ft_dup(cmd->fds, 0);
+	}
 	if (!shell->sucess)
-		exit(errno);
-    if (!is_it_builtin(shell->builtins, cmd->toks[0]))
-        ft_exec_in_child_process(cmd);
-    else
-       ft_execute_one_builtin(cmd, shell);
-    exit(EXIT_SUCCESS);
+	{
+		perror("dup");
+		exit(1);
+	}
+	if (cmd->do_not_run)
+		exit(1);
+	if (!is_it_builtin(shell->builtins, cmd->toks[0]))
+		ft_exec_in_child_process(cmd);
+	else
+		ft_execute_one_builtin(cmd, shell);
+	exit(EXIT_SUCCESS);
 }
 
 void	run_processes(t_commands *cmd, t_shell *shell, int fds[2])
 {
-	int	pid;
-	t_commands *prev_cmd;	
-	int		status;
+	int			pid;
+	int			status;
+	t_commands	*prev_cmd;	
 
-	shell->sucess = 1;
+	shell->sucess = 0;
 	if (pipe(cmd->fds) < 0)
-		exit(errno);
+		exit(1);
 	pid = fork();
 	if (pid < 0)
-		exit(errno);
+		exit(1);
 	else if (pid == 0)
-        run_in_child_process(cmd, shell, fds);
+		run_in_child_process(cmd, shell, fds);
 	if (cmd->cmd_pos != 1)
 	{
 		close(fds[0]);
@@ -81,8 +85,7 @@ void	run_processes(t_commands *cmd, t_shell *shell, int fds[2])
 	cmd = cmd->next;
 	if (cmd)
 		run_processes(cmd, shell, prev_cmd->fds);
-	waitpid(pid, &status, 0);
-	if (!shell->sucess)
-		exit(errno);
-	shell->last_status = WIFEXITED(status);
+	waitpid(-1, &status, 0);
+	if (WIFEXITED(status))
+		shell->last_status = WEXITSTATUS(status);
 }

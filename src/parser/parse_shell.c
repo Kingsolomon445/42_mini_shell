@@ -6,106 +6,119 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/08 17:38:22 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/09 20:27:53 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:46:17 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-static int memory_allocation(char **res, const char *start, int letter_count, int word_index)
+static char	*make_commands(const char *input, int start, int end)
 {
-    res[word_index] = (char *)malloc((letter_count + 1) * sizeof(char));
-    if (!res[word_index])
-	{
-		ft_free_split(res);
-        return 0;
-    }
-    ft_strlcpy(res[word_index], start, letter_count + 1);
-    return 1;
+   char *command;
+
+   command = ft_substr(input, start, end - start);
+   return (command);
+   
 }
 
-char **ft_split_commands(const char *s, char c, int cmd_no)
+char **ft_split_commands(const char *inp, int cmd_no, t_shell *shell)
 {
-	const char *str;
-	int	word_index;
-	int	letter_count;
-	const char *start;
-	int	in_quotes;
-	char **res;
+	const char *input;
+	int	cmd_index;
+	t_cmd_pos *cmd_pos;
+	char **commands;
+	int	start;
+	int	end;
 
-    if (!s)
-        return NULL;
-    str = s;
-    word_index = 0;
-    res = (char **)malloc((cmd_no + 1) * sizeof(char *));
-    if (!res)
-        return NULL;
-    while (*str)
+    if (!inp)
+        return (NULL);
+    input = inp;
+    cmd_index = 0;
+    commands = (char **)malloc((cmd_no + 1) * sizeof(char *));
+	cmd_pos = shell->cmd_pos_head;
+	start = 0;
+	while (cmd_pos)
 	{
-       	letter_count = 0;
-        start = str;
-        in_quotes = 0;
-        while (*str && (*str != c || in_quotes))
-		{
-            if (ft_strchr("\"'", *str))
-                in_quotes = !in_quotes;
-            letter_count++;
-            str++;
-        }
+		end = cmd_pos->index;
+		commands[cmd_index++] = make_commands(input, start, end);
+		start = end + 1;
+		cmd_pos = cmd_pos->next;
+	}
+    end = ft_strlen(input);
+	if (end > start)
+		commands[cmd_index++] = make_commands(input, start, end);
+    commands[cmd_index] = NULL;
+    return (commands);
+}
 
-        if (letter_count > 0)
-		{
-            if (!memory_allocation(res, start, letter_count, word_index))
-                return NULL;
-            word_index++;
-        }
-        if (*str)
-            str++;
-    }
-    res[word_index] = NULL;
-    return res;
+int	parse_pipe(t_shell *shell, char **input, int *pipe_count, int i, char last_char)
+{
+	char	*temp;
+	
+	(*pipe_count)++;
+	if (i == 0 || (*input)[i + 1] == '\0' || ((*input)[i - 1] == '|' && (*input)[i + 1] == '|') || ft_strchr("><", last_char))
+		return (ft_printf_fd(2, PIPESYNTAXERR), ft_free(*input), set_status(shell, 258), 0);
+	while((*input)[i] && ft_strchr(" \n\t\v\f\b><", (*input)[i]))
+		i++;
+	if (!((*input)[i]))
+		return (ft_printf_fd(2, SYNTAXERR), ft_free(*input), set_status(shell, 258), 0);
+	if ((*input)[i - 1] == '|')
+	{
+		temp = ft_substr(*input, 0, i - 1);
+		ft_free(*input);
+		*input = temp;
+		return (2);
+	}
+	return (1);
 }
 
 
-void	split_and_validate(t_shell *shell)
+int	split_and_validate(t_shell *shell)
 {
-	int in_quotes;
+	int in_s_quotes;
+	int	in_d_quotes;
 	int	pipe_count;
-	int	valid;
 	int	i;
 	char	*input;
+	char	last_char;
+	int	parse_pipe_res;
+	t_cmd_pos *cmd_pos;
 
-	in_quotes = 0;
+	in_s_quotes = 0;
+	in_d_quotes = 0;
 	pipe_count = 0;
 	i = 0;
 	input = ft_strdup(shell->input);
-	valid = 1;
+	if (!input)
+		return (0);
 	while(input[i])
 	{
-		if (ft_strchr("\"'", input[i]))
-			in_quotes = !in_quotes;
-		else if (input[i] == '|' && !in_quotes)
+		if (ft_strchr("'", input[i]) && !in_d_quotes)
+			in_s_quotes = !in_s_quotes;
+		if (ft_strchr("\"", input[i]) && !in_s_quotes)
+			in_d_quotes = !in_d_quotes;
+		else if (input[i] == '|' && !in_d_quotes && !in_s_quotes)
 		{
-			pipe_count++;
-			if (i == 0 || input[i + 1] == '\0' || input[i - 1] == '|')
-			{
-				valid = 0;
-				break;
-			}
+			parse_pipe_res = parse_pipe(shell, &input, &pipe_count, i, last_char);
+			if (!parse_pipe_res)
+				return (0);
+			else if (parse_pipe_res == 2)
+				break ;
+			cmd_pos = ft_lstnew_cmdpos(i);
+			if (!cmd_pos)
+				return (0);
+			ft_lstadd_back_cmdpos(&shell->cmd_pos_head, cmd_pos);
 		}
+		last_char = input[i];
 		i++;
 	}
-	if (in_quotes || input[strlen(input) - 1] == '|')
-		valid = 0;
-	if (!valid)
-	{
-		ft_printf_fd(2, "syntax error\n");
-		return ;
-	}
-	shell->commands = ft_split_commands(input, '|', pipe_count + 1);
+	if ((in_s_quotes || in_d_quotes))
+		return (ft_printf_fd(2, "syntax error near unexpected token `%s'\n", input), ft_free(input), set_status(shell, 258), 0);
+	shell->commands = ft_split_commands(input,  pipe_count + 1, shell);
+	return (ft_free(input), 1);
 }
 
-void	parse_shell(t_shell *shell)
+int	parse_shell(t_shell *shell)
 {
 	char	**commands;
 	t_commands *cmd_head;
@@ -114,16 +127,23 @@ void	parse_shell(t_shell *shell)
 
 	i = 0;
 	cmd_head = NULL;
-	split_and_validate(shell);
+	if (!split_and_validate(shell))
+		return (0);
+	if (!shell->commands)
+		return (0);
 	commands = shell->commands;
 	shell->no_cmds = 0;
 	while(commands[i])
 	{
+		// printf("commands here == %s\n", commands[i]);
 		shell->no_cmds++;
 		cmd = parse_commands(shell, commands[i]);
+		if (!cmd)
+			return (0);
 		ft_lstadd_back_cmd(&cmd_head, cmd);
 		i++;
 	}
 	shell->cmd_head = cmd_head;
+	return (1);
 }
 

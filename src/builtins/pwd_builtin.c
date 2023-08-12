@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   pwd_builtin.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sbhatta <sbhatta@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 17:12:39 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/07/22 16:39:06 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/11 12:57:49 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-void	get_pwd(t_shell *shell)
+int	get_pwd(t_shell *shell)
 {
 	char	*buff;
 
@@ -20,9 +20,10 @@ void	get_pwd(t_shell *shell)
 	if (!buff)
 	{
 		shell->last_status = 1;
-		exit(EXIT_FAILURE);
+		exit (1);
 	}
 	write(1, buff, ft_strlen(buff));
 	write(1, "\n", 1);
 	shell->last_status = 0;
+	return (0);
 }

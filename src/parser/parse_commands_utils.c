@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parse_shell_utils.c                                :+:      :+:    :+:   */
+/*   parse_commands_utils.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/09 20:12:06 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/09 20:20:46 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dollar_idx)
+int expand(t_shell *shell, t_parse_commands_vars *vars, char *input)
 {
 	char	*env_title;
 	char	*env_value;
@@ -20,16 +20,20 @@ void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dol
 	t_dollar	*dollar;
 
 	len = 0;
-	if (ft_isdigit(input[len]))
+	if (ft_isdigit(input[len]) || ft_strchr("?$", input[len]))
 		len++;
 	else if (!ft_strchr("\"'", input[len]))
 	{
-		while(input[len] && ft_isalnum(input[len]))
+		while(input[len] && (ft_isalnum(input[len])))
 			len++;
 	}
 	env_title = ft_substr(input, 0, len);
-	if (compare_cmd("?", env_title))
+	if (!env_title)
+		return (0);
+	if (compare_str("?", env_title))
 		env_value = ft_itoa(shell->last_status);
+	else if(compare_str("0", env_title))
+		env_value = ft_strdup("minishell");
 	else
 	{
 		env_value = getenv(env_title);
@@ -38,45 +42,12 @@ void expand(t_shell *shell, char *input, int *i, t_dollar **dollar_head, int dol
 		else
 			env_value = ft_strdup("");
 	}
-	dollar = ft_lstnew_dollar(dollar_idx, env_value);
-	ft_lstadd_back_dollar(dollar_head, dollar);
-	*i += len;
-	ft_free(env_title);
-}
-
-
-t_dollar	*check_to_expand(t_dollar **dollar_head, int idx)
-{
-	t_dollar *dollar;
-
-	dollar = *dollar_head;
-	while(dollar)
-	{
-		if (dollar->index == idx)
-			return (dollar);
-		dollar = dollar->next;
-	}
-	return (NULL);
-}
-
-
-int	ft_setsinstr(char *sets, char *rem_input)
-{
-	int	i;
-	int	j;
-
-	i = 0;
-	j = 0;
-	while(sets[i])
-	{
-		j = 0;
-		while(rem_input[j])
-		{
-			if (sets[i] == rem_input[j])
-				return (1);
-			j++;
-		}
-		i++;
-	}
-	return (0);
+	if (!env_value)
+		return (ft_free(env_title), 0);
+	dollar = ft_lstnew_dollar(vars->dollar_idx, env_value);
+	if (!dollar)
+		return (ft_free(env_title), ft_free(env_value), 0);
+	ft_lstadd_back_dollar(&vars->dollar, dollar);
+	vars->i += len;
+	return (ft_free(env_title), 1);
 }

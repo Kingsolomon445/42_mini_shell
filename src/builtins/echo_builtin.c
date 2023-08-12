@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 17:49:22 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/05 17:42:14 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,9 +54,9 @@ static void	print_echo_args(char **cmd_with_args)
 		{
 			if (need_print)
 			{
-				printf("%s", cmd_with_args[i]);
+				ft_printf_fd(1, "%s", cmd_with_args[i]);
 				if (cmd_with_args[i + 1])
-					printf(" ");
+					ft_printf_fd(1, " ");
 			}
 		}
 		else
@@ -64,9 +64,19 @@ static void	print_echo_args(char **cmd_with_args)
 		i++;
 	}
 	if (new_line)
-		printf("\n");
+		ft_printf_fd(1, "\n");
 }
 
+static void	print_echo_offcase(t_commands *cmd, int i)
+{
+	while (cmd->toks[i])
+	{
+		ft_printf_fd(1, "%s", cmd->toks[i]);
+		if (cmd->toks[i + 1])
+			ft_printf_fd(1, " ");
+		i++;
+	}
+}
 
 void	echo_echo(t_commands *cmd)
 {
@@ -76,27 +86,22 @@ void	echo_echo(t_commands *cmd)
 	i = 1;
 	new_line = 0;
 	if (cmd->toks[1] == NULL)
-		write(1, "\n", 1);
+		ft_printf_fd(1, "\n");
 	else
 	{
-		if (compare_cmd(cmd->toks[0], "echo"))
+		if (compare_str(cmd->toks[0], "echo"))
 			print_echo_args(cmd->toks);
 		else
 		{
-			if (compare_cmd(cmd->toks[1], "-n"))
+			if (compare_str(cmd->toks[1], "-n"))
 			{
 				new_line = 1;
 				i++;
 			}
-			while (cmd->toks[i])
-			{
-				printf("%s", cmd->toks[i]);
-				if (cmd->toks[i + 1])
-					printf(" ");
-				i++;
-			}
+			print_echo_offcase(cmd, i);
 			if (!new_line)
-				printf("\n");
+				ft_printf_fd(1, "\n");
 		}
 	}
+	exit (0);
 }
