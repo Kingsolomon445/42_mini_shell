@@ -80,6 +80,15 @@ static void	eval_quotes(t_shell *shell, char *cmd, char **new_cmd, int *i, int *
 	parse_quotes(shell, cmd, new_cmd, i, j, size, quote);
 }
 
+void append_to_new_cmd(char **new_cmd, int *size, int *j, char c)
+{
+    (*new_cmd)[*j] = c;
+    if (*j >= *size - 1)
+	{
+        *size *= 2;
+        *new_cmd = ft_realloc(*new_cmd, size);
+    }
+}
 
 char	*parse(t_shell *shell, char *cmd, t_token_pos **token_pos, t_redirection **redirection)
 {
@@ -105,15 +114,9 @@ char	*parse(t_shell *shell, char *cmd, t_token_pos **token_pos, t_redirection **
 		if (shell->do_not_run && shell->cmd_cnt > 1)
 			break;
 		if ((!shell->sucess && shell->cmd_cnt > 1) || shell->do_not_run)
-			return (NULL);
-		if (j >= size - 1)
-		{
-			new_cmd[j] = '\0';
-			new_cmd = ft_realloc(new_cmd, &size);
-			j = ft_strlen(new_cmd);
-		}
+			return (free(new_cmd), NULL);
+		append_to_new_cmd(&new_cmd, &size, &j, '\0');
     }
-	new_cmd[j] = '\0';
 	return (new_cmd);
 }
 
@@ -133,17 +136,14 @@ t_commands *parse_commands(t_shell *shell, char *old_command)
 	redirection = NULL;
 	new_cmd = parse(shell, cmd, &token_pos, &redirection);
 	if (!new_cmd)
-		return (0);
+		return (NULL);
 	ft_free(cmd);
-	cmd = ft_strdup(new_cmd);
-	if (compare_str("", cmd) && redirection)
+	if (compare_str("", new_cmd) && redirection)
 	{
 		shell->last_status = 0;
 		shell->do_not_run = 1;
 	}
-	if (!cmd)
-		return (NULL);
 	// printf("new cmd == %s\n", cmd);
-	command = ft_lstnew_cmd(shell, redirection, token_pos, cmd);
+	command = ft_lstnew_cmd(shell, redirection, token_pos, new_cmd);
 	return (command);
 }

@@ -116,6 +116,7 @@ t_commands *parse_commands(t_shell *shell, char *old_command);
 int	parse_redirection(t_shell *shell, char *command, int *idx, t_redirection **redirection);
 char	*expand(t_shell *shell, char *input, int *i);
 int	handle_redirections(t_commands *cmd);
+char **ft_split_input(const char *inp, int cmd_no, t_shell *shell);
 
 
 
@@ -124,6 +125,7 @@ int	parse_dollar(t_shell *shell, char **new_cmd, char *cmd, int *i, int *j, int 
 char	*ft_realloc(char *str, int *size);
 char	*ft_join(char *str, char *to_add);
 int	count_commands(char **commands);
+void append_to_new_cmd(char **new_cmd, int *size, int *j, char c);
 
 //PARSERS
 

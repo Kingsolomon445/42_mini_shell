@@ -19,15 +19,15 @@ char *expand(t_shell *shell, char *input, int *i)
 	int		len;
 
 	len = 0;
-	if (ft_isdigit((input)[len]) || ft_strchr("?$", (input)[len]))
+	if (ft_isdigit(input[len]) || ft_strchr("?$", input[len]))
 		len++;
-	else if (!ft_strchr("\"'", (input)[len]))
+	else if (!ft_strchr("\"'", input[len]))
 	{
-		while((input)[len] && (ft_isalnum(input[len]) || ft_strchr("_", input[len])))
+		while(input[len] && (ft_isalnum(input[len]) || ft_strchr("_", input[len])))
 			len++;
 	}
 	*i += len;
-	env_title = ft_substr((input), 0, len);
+	env_title = ft_substr(input, 0, len);
 	if (!env_title)
 		return (NULL);
 	if (compare_str("?", env_title))
@@ -42,8 +42,6 @@ char *expand(t_shell *shell, char *input, int *i)
 		else
 			env_value = ft_strdup("");
 	}
-	if (!env_value)
-		return (ft_free(env_title), NULL);
 	return (ft_free(env_title), env_value);
 }
 

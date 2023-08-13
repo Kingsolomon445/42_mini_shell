@@ -23,8 +23,6 @@ int p(void)
 // 	rl_done = 1;
 // }
 
-
-
 char	*parse_delimeter(t_shell *shell, char *delim, int *do_not_expand)
 {
 	char	*new_delim;
@@ -51,14 +49,8 @@ char	*parse_delimeter(t_shell *shell, char *delim, int *do_not_expand)
 				i++;
 			new_delim[j++] = delim[i++];
 		}
-		if (j >= size - 1)
-		{
-			new_delim[j] = '\0';
-			new_delim = ft_realloc(new_delim, &size);
-			j = ft_strlen(new_delim);
-		}
+		append_to_new_cmd(&new_delim, &size, &j, '\0');
 	}
-	new_delim[j] = '\0';
 	ft_free(delim);
 	return (new_delim);
 }
@@ -80,14 +72,8 @@ char	*parse_heredoc_input(t_shell *shell, char *input, int do_not_expand)
 			parse_dollar(shell, &new_input, input, &i, &j, &size);
 		else
 			new_input[j++] = input[i++];
-		if (j >= size - 1)
-		{
-			new_input[j] = '\0';
-			new_input = ft_realloc(new_input, &size);
-			j = ft_strlen(new_input);
-		}
+		append_to_new_cmd(&new_input, &size, &j, '\0');
 	}
-	new_input[j] = '\0';
 	ft_free(input);
 	return (new_input);
 }
@@ -109,22 +95,8 @@ int	run_here_doc(t_shell *shell, char *delim)
 	// signal(SIGINT, int_handler);
 	// rl_event_hook = p;
     delim = parse_delimeter(shell, ft_strdup(delim), &do_not_expand);
-	// inp = readline("> ");
-	if (isatty(fileno(stdin)))
-		inp = readline("> ");
-	else
+	while (1)
 	{
-		char *line;
-		line = get_next_line(fileno(stdin));
-		inp = ft_strtrim(line, "\n");
-		free(line);
-	}
-    parsed_inp = parse_heredoc_input(shell, inp, do_not_expand);
-    // printf("parsed input == <-%s->  delimeter == <-%s->\n", parsed_inp, delim);
-	while (parsed_inp && !compare_str(parsed_inp, delim) && !compare_str(parsed_inp, "\x03"))
-	{
-		ft_putstr_fd(parsed_inp, heredoc);
-		ft_putstr_fd("\n", heredoc);
 		// inp = readline("> ");
 		if (isatty(fileno(stdin)))
 			inp = readline("> ");
@@ -136,6 +108,11 @@ int	run_here_doc(t_shell *shell, char *delim)
 			free(line);
 		}
         parsed_inp = parse_heredoc_input(shell, inp, do_not_expand);
+		if (!parsed_inp || compare_str(parsed_inp, delim) || compare_str(parsed_inp, "\x03"))
+			break ;
+		ft_putstr_fd(parsed_inp, heredoc);
+		ft_putstr_fd("\n", heredoc);
 	}
+	close(heredoc);
 	return (open("here_doc", O_RDONLY));
 }

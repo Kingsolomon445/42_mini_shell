@@ -25,12 +25,7 @@ void	parse_quotes(t_shell *shell, char *str, char **new_str, int *i, int *j, int
 		}
 		else
 			(*new_str)[(*j)++] = str[(*i)++];
-		if (*j == *size - 1)
-		{
-            (*new_str)[(*j)] = '\0';
-			*new_str = ft_realloc(*new_str, size);
-			*j = ft_strlen(*new_str);
-		}
+		append_to_new_cmd(new_str, size, j, '\0');
 	}
 	if (str[(*i)])
 		(*i)++;
@@ -58,7 +53,6 @@ char	*ft_realloc(char *str, int *size)
 {
 	char	*new_str;
 
-	*size += 20;
 	new_str = malloc(*size);
 	if (!new_str)
 		return (NULL);

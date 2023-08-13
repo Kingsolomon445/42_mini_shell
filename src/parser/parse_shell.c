@@ -12,45 +12,6 @@
 
 #include "../../include/minishell.h"
 
-static char	*make_commands(const char *input, int start, int end)
-{
-   char *command;
-
-   command = ft_substr(input, start, end - start);
-   return (command);
-   
-}
-
-char **ft_split_commands(const char *inp, int cmd_no, t_shell *shell)
-{
-	const char *input;
-	int	cmd_index;
-	t_cmd_pos *cmd_pos;
-	char **commands;
-	int	start;
-	int	end;
-
-    if (!inp)
-        return (NULL);
-    input = inp;
-    cmd_index = 0;
-    commands = (char **)malloc((cmd_no + 1) * sizeof(char *));
-	cmd_pos = shell->cmd_pos_head;
-	start = 0;
-	while (cmd_pos)
-	{
-		end = cmd_pos->index;
-		commands[cmd_index++] = make_commands(input, start, end);
-		start = end + 1;
-		cmd_pos = cmd_pos->next;
-	}
-    end = ft_strlen(input);
-	if (end > start)
-		commands[cmd_index++] = make_commands(input, start, end);
-    commands[cmd_index] = NULL;
-    return (commands);
-}
-
 int	parse_pipe(t_shell *shell, char **input, int *pipe_count, int i, char last_char)
 {
 	char	*temp;
@@ -71,6 +32,7 @@ int	parse_pipe(t_shell *shell, char **input, int *pipe_count, int i, char last_c
 	}
 	return (1);
 }
+
 
 
 int	split_and_validate(t_shell *shell)
@@ -114,7 +76,7 @@ int	split_and_validate(t_shell *shell)
 	}
 	if ((in_s_quotes || in_d_quotes))
 		return (ft_printf_fd(2, "syntax error near unexpected token `%s'\n", input), ft_free(input), set_status(shell, 258), 0);
-	shell->commands = ft_split_commands(input,  pipe_count + 1, shell);
+	shell->commands = ft_split_input(input,  pipe_count + 1, shell);
 	return (ft_free(input), 1);
 }
 

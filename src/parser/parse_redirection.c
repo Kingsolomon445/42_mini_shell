@@ -45,6 +45,8 @@ int	open_fd(char *file_name, char red_type)
 		fd = open(file_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	else if (red_type == RED_APPEND)
 		fd = open(file_name, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	if (fd != -1)
+		close(fd);
 	return (fd);
 }
 
@@ -119,14 +121,8 @@ char	*parse_file(t_shell *shell, char *file)
 				i++;
 			new_file[j++] = file[i++];
 		}
-		if (j >= size - 1)
-		{
-			new_file[j] = '\0';
-			new_file = ft_realloc(new_file, &size);
-			j = ft_strlen(new_file);
-		}
+		append_to_new_cmd(&new_file, &size, &j, '\0');
 	}
-	new_file[j] = '\0';
 	ft_free(file);
 	return (new_file);
 }
@@ -175,10 +171,8 @@ int	parse_redirection(t_shell *shell, char *command, int *idx, t_redirection **r
 	while(command[j] && ft_strchr(" \t\b\v\n", command[j]))
 		j++;
 	start = j;
-	while(command[j])
+	while (command[j] && !ft_strchr(" \t\b\v\n><|", command[j]))
 	{
-		if (ft_strchr(" \t\b\v\n><|", command[j]))
-			break ;
 		if (ft_strchr("\"'", command[j]))
 		{
 			quote = command[j++];
