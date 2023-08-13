@@ -6,31 +6,11 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/09 19:49:59 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 17:43:07 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 20:49:25 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-static t_parse_commands_vars	*init_parse_command_vars(char *old_command, char *new_command)
-{
-	t_parse_commands_vars	*vars;
-	
-	vars = malloc(sizeof(t_parse_commands_vars));
-	if (!vars)
-		return (NULL);
-	vars->command = ft_strtrim(old_command, " \v\f\t\n\b");
-	if (!vars->command)
-		return (ft_free(vars), NULL);
-	vars->new_command = new_command;
-	vars->dollar = NULL;
-	vars->i = 0;
-	vars->j = 0;
-	vars->dollar_idx = 0;
-	vars->redirection = NULL;
-	vars->token_pos = NULL;
-	return (vars);
-}
 
 static int	check_if_to_make_space(char *command, char *new_command, char quote)
 {
@@ -60,130 +40,110 @@ static int	check_if_to_make_space(char *command, char *new_command, char quote)
 	return (0);
 }
 
-
-// static void	parse_quotes(char *cmd, char **new_cmd, int *i, int *j)
-// {
-// 	char	quote;
-
-// 	quote = *cmd;
-// 	while (cmd[*i] && cmd[*i] != quote)
-// 	{
-// 		(*new_cmd)[(*j)++] = cmd[(*i)++];
-// 		if (cmd[(*i) - 1] == '$')
-// 		{
-// 			if (quote == '"' && cmd[(*i)] && cmd[(*i)] != '"' && (ft_isalnum(cmd[(*i)]) || ft_strchr("_?$'", cmd[(*i)])))
-// 				expand()
-// 		}
-// 	}
-// }
-
-static void	parse_quotes(t_shell *shell, t_parse_commands_vars *vars)
+static int	parse_and_escape_backslash(char **new_cmd, char *cmd, int *i, int *j, t_token_pos **token_pos)
 {
-	vars->quote = vars->command[vars->i++];
-	vars->new_command[vars->j] = '\0';
-	if (vars->command[vars->i] == vars->quote && check_if_to_make_space(vars->command + vars->i + 1, vars->new_command, vars->quote))
-	{
-		vars->new_command[vars->j++] = ' ';
-		vars->new_token_pos = ft_lstnew_tokenpos(vars->j - 1);
-		// if (!vars->new_token_pos)
-		// 	return (0);
-		if (ft_strchr(" \v\t\f\b\n", vars->new_command[vars->j - 1]))
-			ft_lstadd_back_tokenpos(&vars->token_pos, vars->new_token_pos);
-		while (vars->command[vars->i + 1] == vars->quote)
-			vars->i++;
-	}
-	while (vars->command[vars->i] && vars->command[vars->i] != vars->quote)
-	{
-		vars->new_command[vars->j++] = vars->command[vars->i++];
-		if (vars->command[vars->i - 1] == '$')
-		{
-			if (vars->quote == '"' && vars->command[vars->i] && vars->command[vars->i] != '"' && (ft_isalnum(vars->command[vars->i]) || ft_strchr("_?$'", vars->command[vars->i])))
-				shell->sucess = expand(shell, vars, vars->command + vars->i);
-			vars->dollar_idx++;
-		}
-	}
-	if (vars->command[vars->i])
-		vars->i++;
-}
+	t_token_pos *new_token_pos;
 
-static int	parse_and_escape_backslash(t_parse_commands_vars *vars)
-{
-	if (vars->command[vars->i] == '\\')
-		vars->i++;
-	if (vars->command[vars->i])
+	if (cmd[*i] == '\\')
+		(*i)++;
+	if (cmd[*i])
 	{
-		if (vars->command[vars->i] == '$')
-			vars->dollar_idx++;
-		vars->new_command[vars->j++] = vars->command[vars->i++];
-		while (vars->command[vars->i] && ft_strchr(" \v\t\f\b\n", vars->command[vars->i]) && ft_strchr(" \v\t\f\b\n", vars->new_command[vars->j - 1]))
-			vars->i++;
-		vars->new_token_pos = ft_lstnew_tokenpos(vars->j - 1);
-		if (!vars->new_token_pos)
+		(*new_cmd)[(*j)++] = cmd[(*i)++];
+		while (cmd[*i] && ft_strchr(" \v\t\f\b\n", cmd[*i]) && ft_strchr(" \v\t\f\b\n", (*new_cmd)[(*j) - 1]))
+			(*i)++;
+		new_token_pos = ft_lstnew_tokenpos(*j - 1);
+		if (!new_token_pos)
 			return (0);
-		if (ft_strchr(" \v\t\f\b\n", vars->new_command[vars->j - 1]))
-			ft_lstadd_back_tokenpos(&vars->token_pos, vars->new_token_pos);
+		if (ft_strchr(" \v\t\f\b\n", (*new_cmd)[(*j) - 1]))
+			ft_lstadd_back_tokenpos(token_pos, new_token_pos);
 	}
 	return (1);
 }
 
-int	count_commands(char **commands)
-{
-	int	i;
 
+static void	eval_quotes(t_shell *shell, char *cmd, char **new_cmd, int *i, int *j, int *size, t_token_pos **token_pos)
+{
+	char	quote;
+	t_token_pos *new_token_pos;
+	
+	quote = cmd[(*i)++];
+	(*new_cmd)[(*j)] = '\0';
+	if (cmd[(*i)] == quote && check_if_to_make_space(cmd + (*i) + 1, (*new_cmd), quote))
+	{
+		(*new_cmd)[(*j)++] = ' ';
+		new_token_pos = ft_lstnew_tokenpos((*j) - 1);
+		if (ft_strchr(" \v\t\f\b\n", (*new_cmd)[(*j) - 1]))
+			ft_lstadd_back_tokenpos(token_pos, new_token_pos);
+		while (cmd[(*i) + 1] == quote)
+			(*i)++;
+	}
+	parse_quotes(shell, cmd, new_cmd, i, j, size, quote);
+}
+
+
+char	*parse(t_shell *shell, char *cmd, t_token_pos **token_pos, t_redirection **redirection)
+{
+	char	*new_cmd;
+	int		size;
+	int		i;
+	int		j;
+
+	size = 20;
 	i = 0;
-	while (commands[i])
-		i++;
-	return (i);
-}
-
-
-int	parse(t_shell *shell, t_parse_commands_vars *vars)
-{
-	while (vars->command[vars->i])
+	j = 0;
+	new_cmd = malloc(size);
+	while (cmd[i])
 	{
-        if (ft_strchr("\"'", vars->command[vars->i]))
-			parse_quotes(shell, vars);
-		else if (vars->command[vars->i] == '$')
-		{
-			vars->new_command[vars->j++] = vars->command[vars->i++];
-			if (vars->command[vars->i] && (ft_isalnum(vars->command[vars->i]) || ft_strchr("_?$\"'", vars->command[vars->i])))
-            	shell->sucess = expand(shell, vars, vars->command + vars->i);
-            vars->dollar_idx++;
-        }
-		else if (ft_strchr("><", vars->command[vars->i]))
-			shell->sucess = parse_redirection(shell, vars, vars->command + vars->i);
+        if (ft_strchr("\"'", cmd[i]))
+			eval_quotes(shell, cmd, &new_cmd, &i, &j, &size, token_pos);
+		else if (cmd[i] == '$')
+			parse_dollar(shell, &new_cmd, cmd, &i, &j, &size);
+		else if (ft_strchr("><", cmd[i]))
+			shell->sucess = parse_redirection(shell, cmd + i, &i, redirection);
 		else
-			shell->sucess = parse_and_escape_backslash(vars);
-		if (shell->do_not_run && vars->cmd_cnt > 1)
+			shell->sucess = parse_and_escape_backslash(&new_cmd, cmd, &i, &j, token_pos);
+		if (shell->do_not_run && shell->cmd_cnt > 1)
 			break;
-		if ((!shell->sucess && vars->cmd_cnt > 1) || shell->do_not_run)
-			return (0);
+		if ((!shell->sucess && shell->cmd_cnt > 1) || shell->do_not_run)
+			return (NULL);
+		if (j >= size - 1)
+		{
+			new_cmd[j] = '\0';
+			new_cmd = ft_realloc(new_cmd, &size);
+			j = ft_strlen(new_cmd);
+		}
     }
-	return (1);
+	new_cmd[j] = '\0';
+	return (new_cmd);
 }
 
 t_commands *parse_commands(t_shell *shell, char *old_command)
 {
-    char new_command[ft_strlen(old_command) + 1];
-	t_parse_commands_vars	*vars;
-
-	vars = init_parse_command_vars(old_command, new_command);
-	vars->cmd_cnt = count_commands(shell->commands);
-	if (!vars)
-		return (NULL);
+    char *new_cmd;
+	char	*cmd;
+	t_token_pos *token_pos;
+	t_redirection *redirection;
+	t_commands	*command;
+	
+	
+	shell->cmd_cnt = count_commands(shell->commands);
 	shell->do_not_run = 0;
-	if (!parse(shell, vars))
+	cmd = ft_strtrim(old_command, " \t\n\b\v\f");
+	token_pos = NULL;
+	redirection = NULL;
+	new_cmd = parse(shell, cmd, &token_pos, &redirection);
+	if (!new_cmd)
 		return (0);
-    vars->new_command[vars->j] = '\0';
-	ft_free(vars->command);
-	vars->command = ft_strdup(vars->new_command);
-	if (compare_str("", vars->command) && vars->redirection)
+	ft_free(cmd);
+	cmd = ft_strdup(new_cmd);
+	if (compare_str("", cmd) && redirection)
 	{
 		shell->last_status = 0;
 		shell->do_not_run = 1;
 	}
-	if (!vars->command)
+	if (!cmd)
 		return (NULL);
-	vars->cmd = ft_lstnew_cmd(shell, vars);
-	return (vars->cmd);
+	// printf("new cmd == %s\n", cmd);
+	command = ft_lstnew_cmd(shell, redirection, token_pos, cmd);
+	return (command);
 }

@@ -6,23 +6,22 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 15:39:59 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 20:49:41 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-t_commands	*ft_lstnew_cmd(t_shell *shell, t_parse_commands_vars *vars)
+t_commands	*ft_lstnew_cmd(t_shell *shell, t_redirection *redirection, t_token_pos *token_pos, char *command)
 {
 	t_commands	*cmd;
 
 	cmd = malloc(sizeof(t_commands));
 	if (!cmd)
 		return (NULL);
-	cmd->dollar = vars->dollar;
-	cmd->red = vars->redirection;
-	cmd->token_pos = vars->token_pos;
-	cmd->command = vars->command;
+	cmd->red = redirection;
+	cmd->token_pos = token_pos;
+	cmd->command = command;
 	cmd->toks = create_tokens(cmd);
 	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
 	cmd->cmd_pos = shell->no_cmds;
@@ -58,7 +57,6 @@ void	ft_free_cmds(t_commands **cmd_head)
 	{
 		current = *cmd_head;
 		*cmd_head = (*cmd_head)->next;
-		ft_free_dollar(&current->dollar);
 		ft_free_red(&current->red);
 		ft_free_tokenpos(&current->token_pos);
 		ft_free_split(current->toks);

@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:16:01 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/13 14:13:21 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 20:49:02 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,15 +47,6 @@ typedef struct s_redirection
 }	t_redirection;
 
 
-typedef struct s_dollar
-{
-	int				expand_dollar;
-	int				index;
-	char			*value;
-	struct s_dollar	*next;
-
-}	t_dollar;
-
 typedef struct s_token_pos
 {
 	int	index;
@@ -79,28 +70,9 @@ typedef struct s_commands
 	int					cmd_pos;
 	int					do_not_run;
 	t_redirection		*red;
-	t_dollar		*dollar;
 	t_token_pos		*token_pos;
 	struct s_commands	*next;
 }	t_commands;
-
-typedef struct s_parse_commands_vars
-{
-	char	*command;
-	char	*new_command;
-	char	quote;
-    int i;
-	int j;
-	int	cmd_cnt;
-	int dollar_idx;
-	int	do_not_run;
-	t_token_pos *token_pos;
-	t_token_pos *new_token_pos;
-	t_redirection	*redirection;
-	t_dollar	*dollar;
-	t_commands	*cmd;
-} t_parse_commands_vars;
-
 
 typedef struct s_create_tokens
 {
@@ -131,6 +103,7 @@ typedef struct s_shell
 	int			dollar_idx;
 	int			sucess;
 	int			do_not_run;
+	int	cmd_cnt;
 	t_commands	*cmd_head;
 	t_cmd_pos	*cmd_pos_head;
 	t_list		*hist_head;
@@ -140,11 +113,17 @@ typedef struct s_shell
 char	**create_tokens(t_commands *cmd);
 int		parse_shell(t_shell *shell);
 t_commands *parse_commands(t_shell *shell, char *old_command);
-int	parse_redirection(t_shell *shell, t_parse_commands_vars *vars,  char *input);
-int expand(t_shell *shell, t_parse_commands_vars *vars, char *input);
-t_dollar	*check_to_substitute(t_dollar **dollar_head, int idx);
-char	*ft_substitute(char *new_command, t_dollar **dollar_head, int *dollar_idx);
+int	parse_redirection(t_shell *shell, char *command, int *idx, t_redirection **redirection);
+char	*expand(t_shell *shell, char *input, int *i);
 int	handle_redirections(t_commands *cmd);
+
+
+
+void	parse_quotes(t_shell *shell, char *cmd, char **new_cmd, int *i, int *j, int *size, char quote);
+int	parse_dollar(t_shell *shell, char **new_cmd, char *cmd, int *i, int *j, int *size);
+char	*ft_realloc(char *str, int *size);
+char	*ft_join(char *str, char *to_add);
+int	count_commands(char **commands);
 
 //PARSERS
 
@@ -225,7 +204,6 @@ void	ft_free(void *ptr);
 void	ft_free_lst(t_list **headref);
 void	ft_free_for_next_read(t_shell *shell);
 void	ft_free_red(t_redirection **headref);
-void	ft_free_dollar(t_dollar **headref);
 
 void	ft_exit_shell(t_shell *shell, long status);
 void    set_status(t_shell *shell, int status);
@@ -234,10 +212,8 @@ void    set_status(t_shell *shell, int status);
 //LINKED LISTS
 t_redirection	*ft_lstnew_red(int red_type, int fd);
 void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red);
-t_commands	*ft_lstnew_cmd(t_shell *shell, t_parse_commands_vars *vars);
+t_commands	*ft_lstnew_cmd(t_shell *shell, t_redirection *redirection, t_token_pos *token_pos, char *command);
 void	ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd);
-t_dollar *ft_lstnew_dollar(int index, char *value);
-void ft_lstadd_back_dollar(t_dollar **dollar_head, t_dollar *new_dollar);
 t_token_pos  *ft_lstnew_tokenpos(int index);
 void ft_lstadd_back_tokenpos(t_token_pos **token_pos_head, t_token_pos *new_token_pos);
 void	ft_free_tokenpos(t_token_pos **token_pos);
