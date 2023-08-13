@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/12 17:56:35 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 19:53:28 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:21:57 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,16 +153,16 @@ int	run_here_doc(t_shell *shell, char *delim)
 	// signal(SIGINT, int_handler);
 	// rl_event_hook = p;
     delim = parse_heredoc_limiter(delim, &do_not_expand);
-	inp = readline("> ");
-	// if (isatty(fileno(stdin)))
-	// 	inp = readline("> ");
-	// else
-	// {
-	// 	char *line;
-	// 	line = get_next_line(fileno(stdin));
-	// 	inp = ft_strtrim(line, "\n");
-	// 	free(line);
-	// }
+	// inp = readline("> ");
+	if (isatty(fileno(stdin)))
+		inp = readline("> ");
+	else
+	{
+		char *line;
+		line = get_next_line(fileno(stdin));
+		inp = ft_strtrim(line, "\n");
+		free(line);
+	}
     parsed_inp = parse_heredoc_input(shell, inp, do_not_expand);
     // printf("parsed input == <-%s->  delimeter == <-%s->\n", parsed_inp, delim);
 	while (parsed_inp && !compare_str(parsed_inp, delim) && !compare_str(parsed_inp, "\x03"))
@@ -170,16 +170,16 @@ int	run_here_doc(t_shell *shell, char *delim)
 		ft_putstr_fd(parsed_inp, heredoc);
 		ft_putstr_fd("\n", heredoc);
 		ft_free(inp);
-		inp = readline("> ");
-		// if (isatty(fileno(stdin)))
-		// 	inp = readline("> ");
-		// else
-		// {
-		// 	char *line;
-		// 	line = get_next_line(fileno(stdin));
-		// 	inp = ft_strtrim(line, "\n");
-		// 	free(line);
-		// }
+		// inp = readline("> ");
+		if (isatty(fileno(stdin)))
+			inp = readline("> ");
+		else
+		{
+			char *line;
+			line = get_next_line(fileno(stdin));
+			inp = ft_strtrim(line, "\n");
+			free(line);
+		}
         parsed_inp = parse_heredoc_input(shell, inp, do_not_expand);
 	}
 	ft_free(inp);

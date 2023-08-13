@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:54:25 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 16:19:18 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ char	**get_final_path()
 	char	*path;
 
 	path = getenv("PATH");
+	if (!path)
+		return (NULL);
 	dirs = ft_split(path, ':');
 	return (dirs);
 }
@@ -53,6 +55,22 @@ void	print_history(t_shell *shell)
 	}
 }
 
+int	parse_dir(t_shell *shell, char *current_bin)
+{
+	struct stat	st;
+
+	shell->do_not_run = 1;
+	if (opendir(current_bin))
+		return (set_status(shell, 126), print_error(1, NULL, current_bin, "is a directory"), 1);
+	if (stat(current_bin, &st) == 0)
+	{
+		shell->do_not_run = 0;
+		return (1);
+	}
+	print_error(1, NULL, current_bin, NOFILEDIR);
+	return (set_status(shell, 127), 0);
+}
+
 char	*get_valid_bin(t_shell *shell, char *cmd)
 {
 	int			i;
@@ -61,10 +79,12 @@ char	*get_valid_bin(t_shell *shell, char *cmd)
 	struct stat	st;
 
 	i = -1;
+	if (!shell->path)
+		return (ft_strdup(cmd));
 	new_cmd = ft_strjoin("/", cmd);
 	if (!new_cmd)
 		return (NULL);
-	while (shell->path[++i])
+	while (shell->path[++i] && !(ft_strchr(cmd, '/')))
 	{
 		current_bin = ft_strjoin(shell->path[i], new_cmd);
 		if (!current_bin)
@@ -74,6 +94,8 @@ char	*get_valid_bin(t_shell *shell, char *cmd)
 		ft_free(current_bin);
 	}
 	current_bin = ft_strdup(cmd);
+	if (ft_strchr(current_bin, '/'))
+		parse_dir(shell, current_bin);
 	return (ft_free(new_cmd), current_bin);
 }
 

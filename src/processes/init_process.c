@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:20:12 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 14:26:22 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 15:25:37 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,9 +42,8 @@ int	handle_redirections(t_commands *cmd)
 	return (1);
 }
 
-void	ft_exec_in_child_process(t_commands *cmd)
+void	ft_exec_in_child_process(t_shell *shell, t_commands *cmd)
 {
-	extern char	**environ;
 	int			sucess;
 
 	sucess = 1;
@@ -55,7 +54,7 @@ void	ft_exec_in_child_process(t_commands *cmd)
 		perror("dup");
 		exit (1);
 	}
-	execve(cmd->vbin, cmd->toks, environ);
+	execve(cmd->vbin, cmd->toks, shell->env);
 	print_error(1, NULL, cmd->toks[0], NOCMDFOUND);
 	if (errno == 2)
 		exit (127);
@@ -74,7 +73,7 @@ void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
 	if (pid < 0)
 		exit(1);
 	else if (pid == 0)
-		ft_exec_in_child_process(cmd);
+		ft_exec_in_child_process(shell, cmd);
 	status = 0;
 	waitpid(pid, &status, 0);
 	shell->last_status = WEXITSTATUS(status);
@@ -89,6 +88,8 @@ void	run_commands(t_shell *shell)
 	original_stdout = dup(STDOUT_FILENO);
 	if (shell->no_cmds == 1)
 	{
+		if (cur_cmd->do_not_run)
+			return ;
 		if (is_it_builtin(shell->builtins, cur_cmd->toks[0]))
 		{
 			if (shell->no_cmds == 1)

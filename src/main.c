@@ -6,16 +6,45 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:13:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/12 19:52:56 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 17:23:21 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
 // ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la > > out | cat << stop3
-// We need to handle when a command starts with /
-// export PATH=""  in this case for example commands shouldnt work
-// unset dont wokr eitehr
+// We need to handle when a command starts with / or ~ or /bin/ 
+
+
+// ls >"./ with spaces"
+
+/*touch whatever
+cat <"./whatever" >"./whatever"
+rm -rf whatever */
+
+/*>echo>
+/bin/rm -f echo
+
+<echo<
+/bin/rm -f echo
+
+>>echo>>
+/bin/rm -f echo*/
+/*
+cd ~/Desktop/
+
+export test=" * "
+touch "$USER * ?eHallo"
+/bin/echo "$USER "*" ?e"*
+rm -f "$USER * ?eHallo"
+
+strip whitespaces after expansion
+
+$tmp_test
+
+
+echo $TES_T
+*/
 
 
 int	init_prompt_title(t_shell *shell)
@@ -52,16 +81,16 @@ static int	take_input(t_shell *shell)
 		shell->welcome_str = shell->success_prompt;
 	else
 		shell->welcome_str = shell->failed_prompt;
-	shell->input = readline(shell->welcome_str);
-	// if (isatty(fileno(stdin)))
-	// 	shell->input = readline(shell->welcome_str);
-	// else
-	// {
-	// 	char *line;
-	// 	line = get_next_line(fileno(stdin));
-	// 	shell->input = ft_strtrim(line, "\n");
-	// 	free(line);
-	// }
+	// shell->input = readline(shell->welcome_str);
+	if (isatty(fileno(stdin)))
+		shell->input = readline(shell->welcome_str);
+	else
+	{
+		char *line;
+		line = get_next_line(fileno(stdin));
+		shell->input = ft_strtrim(line, "\n");
+		free(line);
+	}
 	if (!shell->input)
 		return (1);
 	if (*shell->input)
@@ -98,7 +127,7 @@ static int	init_shell(t_shell *shell)
 	shell->path = get_final_path();
 	shell->builtins = \
 	ft_split("echo cd pwd export unset env exit history", ' ');
-	if (!shell->builtins || !shell->path || !shell->welcome_str)
+	if (!shell->builtins || !shell->welcome_str)
 		return (0);
 	shell->last_status = 0;
 	if (!init_shellenv(shell))
@@ -123,6 +152,7 @@ static	void	init_shell_for_next_read(t_shell *shell)
 	shell->commands = NULL;
 	shell->cmd_pos_head = NULL;
 	shell->sucess = 1;
+	shell->path = get_final_path();
 }
 
 void	printf_welcome(void)

@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:19:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/12 20:04:42 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:20:49 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,13 @@ int	update_env_item(t_shell *shell, char *env_title, char *new_env)
 	char			*temp;
 
 	i = 0;
+	temp = NULL;
 	if (*env_title != '\0')
 	{
 		temp = ft_strjoin(env_title, "=");
 		if (!temp)
 			return (0);
 	}
-	else
-		temp = ft_strdup(env_title);
 	if (check_env(shell->env, env_title))
 	{
 		while (shell->env[i] && !ft_strnstr(shell->env[i], temp, \
@@ -119,7 +118,6 @@ int	change_directory(t_shell *shell, t_commands *cmd)
 		result = print_error(1, "cd", dir, NOFILEDIR);
 	else
 		result = update_pwd(shell, old_dir);
-	printf("dir == %s\n", cmd->toks[1]);
 	if (result == 0)
 		shell->last_status = 0;
 	else

@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:16:01 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:13:21 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,7 @@ int	open_fd(char *file_name, char red_type);
 void	run_commands(t_shell *shell);
 int		is_it_builtin(char **builtins, char *cmd);
 void	run_processes(t_commands *cmd, t_shell *shell, int fds[2]);
-void	ft_exec_in_child_process(t_commands *cmd);
+void	ft_exec_in_child_process(t_shell *shell, t_commands *cmd);
 
 //UTILS
 int		compare_str(char *src, char *dst);

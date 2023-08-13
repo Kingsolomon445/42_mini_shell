@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   export_builtin.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/11 12:14:05 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/11 18:21:14 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/13 14:04:16 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
 static void	print_export(char **env, int equalcount)
 {
 	int			i;

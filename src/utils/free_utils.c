@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:49:41 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 16:55:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:39:57 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,5 +75,6 @@ void	ft_free_for_next_read(t_shell *shell)
 	ft_free_cmdpos(&shell->cmd_pos_head);
 	ft_free_cmds(&shell->cmd_head);
 	shell->cmd_head = NULL;
+	ft_free_split(shell->path);
 }
 

@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/11 12:21:14 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:11:24 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,14 +78,14 @@ void	ft_execute_builtin(t_commands *cur_cmd, t_shell *shell)
 
 void	when_one_builtin(t_shell *shell, t_commands *cur_cmd)
 {
-	// if (compare_str("exit", cur_cmd->toks[0]))
-	// 	perform_exit(cur_cmd, shell);
-	// else if (compare_str("export", cur_cmd->toks[0]))
-	// 	export_env(shell);
-	// else if (compare_str("unset", cur_cmd->toks[0]))
-	// 	unset_var(shell);
-	// else if (compare_str("cd", cur_cmd->toks[0]))
-	// 	change_directory(shell, cur_cmd);
-	// else
-	ft_execute_builtin(cur_cmd, shell);
+	if (compare_str("exit", cur_cmd->toks[0]))
+		perform_exit(cur_cmd, shell);
+	else if (compare_str("export", cur_cmd->toks[0]))
+		export_env(shell);
+	else if (compare_str("unset", cur_cmd->toks[0]))
+		unset_var(shell);
+	else if (compare_str("cd", cur_cmd->toks[0]))
+		change_directory(shell, cur_cmd);
+	else
+		ft_execute_builtin(cur_cmd, shell);
 }

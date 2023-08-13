@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:26:40 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 17:11:50 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 14:14:01 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void	run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 	if (cmd->do_not_run)
 		exit(1);
 	if (!is_it_builtin(shell->builtins, cmd->toks[0]))
-		ft_exec_in_child_process(cmd);
+		ft_exec_in_child_process(shell, cmd);
 	else
 		ft_execute_one_builtin(cmd, shell);
 	exit(EXIT_SUCCESS);

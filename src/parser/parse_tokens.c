@@ -6,7 +6,7 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:25:00 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 17:42:01 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/13 15:20:35 by ofadahun         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,7 +160,7 @@ char	**create_tokens(t_commands *cmd)
 		start = end + 1;
 	}
 	end = ft_strlen(new_cmd);
-	if (end > start)
+	if (end > start || !token_number)
 		tokens[token_number++] = make_token(new_cmd, start, end, &cmd->dollar, &dollar_idx);
 	if (token_number && !tokens[token_number - 1])
 		return (ft_free_split(tokens), ft_free(new_cmd), NULL);
