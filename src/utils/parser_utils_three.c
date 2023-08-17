@@ -1,30 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pwd_builtin.c                                      :+:      :+:    :+:   */
+/*   parser_utils_three.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/19 17:12:39 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/14 19:54:47 by sbhatta          ###   ########.fr       */
+/*   Created: 2023/08/16 20:53:57 by sbhatta           #+#    #+#             */
+/*   Updated: 2023/08/16 20:54:20 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-int	get_pwd(t_shell *shell)
+int	append_to_new_cmd(t_parse_vars *vars, int last)
 {
-	char	*buff;
-
-	buff = getcwd(NULL, 0);
-	if (!buff)
+	if ((!last && vars->j >= vars->size - 1) || last)
 	{
-		shell->last_status = 1;
-		exit (1);
+		vars->new_str[vars->j] = '\0';
+		if (!last)
+			vars->size += 30;
+		else
+			vars->size = ft_strlen(vars->new_str) + 1;
+		vars->new_str = ft_realloc(vars->new_str, vars->size);
+		if (!vars->new_str)
+			return (0);
+		vars->j = ft_strlen(vars->new_str);
 	}
-	write(1, buff, ft_strlen(buff));
-	write(1, "\n", 1);
-	shell->last_status = 0;
-	ft_free(buff);
-	return (0);
+	return (1);
 }

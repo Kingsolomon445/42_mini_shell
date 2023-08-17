@@ -6,13 +6,13 @@
 /*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:20:12 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 15:25:37 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:00:22 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-int	ft_dup_red(t_redirection *red)
+int	ft_dup_red(t_redir *red)
 {
 	if (red->red_type == RED_IN || red->red_type == HEREDOC)
 	{
@@ -28,9 +28,9 @@ int	ft_dup_red(t_redirection *red)
 	return (1);
 }
 
-int	handle_redirections(t_commands *cmd)
+int	handle_redirs(t_commands *cmd)
 {
-	t_redirection	*current_red;
+	t_redir	*current_red;
 
 	current_red = cmd->red;
 	while (current_red)
@@ -42,26 +42,25 @@ int	handle_redirections(t_commands *cmd)
 	return (1);
 }
 
-void	ft_exec_in_child_process(t_shell *shell, t_commands *cmd)
+int	ft_exec_in_child_process(t_shell *shell, t_commands *cmd)
 {
 	int			sucess;
 
 	sucess = 1;
 	if (cmd->red)
-		sucess = handle_redirections(cmd);
+		sucess = handle_redirs(cmd);
 	if (!sucess)
 	{
 		perror("dup");
-		exit (1);
+		return (1);
 	}
 	execve(cmd->vbin, cmd->toks, shell->env);
 	print_error(1, NULL, cmd->toks[0], NOCMDFOUND);
 	if (errno == 2)
-		exit (127);
+		return (127);
 	else if (errno == 13)
-		exit (127);
-	else
-		exit(1);
+		return(127);
+	return(1);
 }
 
 void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
@@ -71,9 +70,12 @@ void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
 
 	pid = fork();
 	if (pid < 0)
-		exit(1);
+		return ;
 	else if (pid == 0)
-		ft_exec_in_child_process(shell, cmd);
+	{
+		status = ft_exec_in_child_process(shell, cmd);
+		ft_exit_shell(shell, status);
+	}
 	status = 0;
 	waitpid(pid, &status, 0);
 	shell->last_status = WEXITSTATUS(status);
@@ -82,25 +84,23 @@ void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
 void	run_commands(t_shell *shell)
 {
 	t_commands	*cur_cmd;
-	int			original_stdout;
 
 	cur_cmd = shell->cmd_head;
-	original_stdout = dup(STDOUT_FILENO);
-	if (shell->no_cmds == 1)
+	if (g_ctrlc)
 	{
-		if (cur_cmd->do_not_run)
-			return ;
+		ft_printf_fd(1, "\n");
+		set_status(shell, 130);
+		return ;
+	}
+	if (shell->no_cmds == 1 && !cur_cmd->do_not_run)
+	{
 		if (is_it_builtin(shell->builtins, cur_cmd->toks[0]))
-		{
-			if (shell->no_cmds == 1)
-				when_one_builtin(shell, cur_cmd);
-		}
+			when_one_builtin(shell, cur_cmd);
 		else
 			ft_execute_one_cmd(cur_cmd, shell);
 	}
-	else
+	else if (shell->no_cmds != 1)
 		run_processes(shell->cmd_head, shell, shell->cmd_head->fds);
-	close(STDOUT_FILENO);
-	dup2(original_stdout, STDOUT_FILENO);
-	close(original_stdout);
+	if (g_ctrlc)
+		ft_printf_fd(1, "\n");
 }

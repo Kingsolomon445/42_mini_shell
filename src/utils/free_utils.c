@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:49:41 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 14:39:57 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:35:00 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void	ft_free_shell(t_shell *shell)
 	ft_free_split(shell->path);
 	ft_free_split(shell->env);
 	ft_free_split(shell->builtins);
-	// ft_free(shell->welcome_str);
+	ft_free_split(shell->commands);
 	ft_free(shell->success_prompt);
 	ft_free(shell->failed_prompt);
 	ft_free(shell->input);
@@ -71,10 +71,10 @@ void	ft_free(void *ptr)
 void	ft_free_for_next_read(t_shell *shell)
 {
 	ft_free(shell->input);
-	shell->input = NULL;
+	ft_free_split(shell->commands);
 	ft_free_cmdpos(&shell->cmd_pos_head);
 	ft_free_cmds(&shell->cmd_head);
-	shell->cmd_head = NULL;
 	ft_free_split(shell->path);
+	if (shell->heredoc_ran)
+		unlink(".here_doc");
 }
-

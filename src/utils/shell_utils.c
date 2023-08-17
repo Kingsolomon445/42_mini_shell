@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shell_utils.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:54:25 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 16:19:18 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:53:06 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,16 @@ void	checkleaks(void)
 	system("leaks minishell");
 }
 
-char	**get_final_path()
+void	set_terminal_attributes(void)
+{
+	struct termios	term;
+
+	tcgetattr(STDIN_FILENO, &term);
+	term.c_lflag &= ~(ECHOCTL);
+	tcsetattr(STDIN_FILENO, TCSANOW, &term);
+}
+
+char	**get_final_path(void)
 {
 	char	**dirs;
 	char	*path;
@@ -28,17 +37,19 @@ char	**get_final_path()
 	dirs = ft_split(path, ':');
 	return (dirs);
 }
-void	print_history(t_shell *shell)
+
+int	print_history(t_shell *shell)
 {
 	int		index;
 	t_list	*temp;
 
 	index = 0;
 	if (!shell->hist_head)
-		return ;
+		return (shell->last_status);
 	if (shell->cmd_head->toks[1] && compare_str("-c", shell->cmd_head->toks[1]))
 	{
 		ft_free_lst(&shell->hist_head);
+		shell->hist_head = NULL;
 		rl_clear_history();
 		shell->last_status = 0;
 	}
@@ -53,55 +64,12 @@ void	print_history(t_shell *shell)
 		}
 		shell->last_status = 0;
 	}
+	return (shell->last_status);
 }
 
-int	parse_dir(t_shell *shell, char *current_bin)
+void	set_status(t_shell *shell, int status)
 {
-	struct stat	st;
-
-	shell->do_not_run = 1;
-	if (opendir(current_bin))
-		return (set_status(shell, 126), print_error(1, NULL, current_bin, "is a directory"), 1);
-	if (stat(current_bin, &st) == 0)
-	{
-		shell->do_not_run = 0;
-		return (1);
-	}
-	print_error(1, NULL, current_bin, NOFILEDIR);
-	return (set_status(shell, 127), 0);
-}
-
-char	*get_valid_bin(t_shell *shell, char *cmd)
-{
-	int			i;
-	char		*current_bin;
-	char		*new_cmd;
-	struct stat	st;
-
-	i = -1;
-	if (!shell->path)
-		return (ft_strdup(cmd));
-	new_cmd = ft_strjoin("/", cmd);
-	if (!new_cmd)
-		return (NULL);
-	while (shell->path[++i] && !(ft_strchr(cmd, '/')))
-	{
-		current_bin = ft_strjoin(shell->path[i], new_cmd);
-		if (!current_bin)
-			return (free(new_cmd), NULL);
-		if (stat(current_bin, &st) == 0)
-			return (free(new_cmd), current_bin);
-		ft_free(current_bin);
-	}
-	current_bin = ft_strdup(cmd);
-	if (ft_strchr(current_bin, '/'))
-		parse_dir(shell, current_bin);
-	return (ft_free(new_cmd), current_bin);
-}
-
-void    set_status(t_shell *shell, int status)
-{
-    shell->last_status = status;
+	shell->last_status = status;
 }
 
 int	ft_putenv(t_shell *shell, char *new_env)
@@ -112,6 +80,8 @@ int	ft_putenv(t_shell *shell, char *new_env)
 	int				i;
 
 	i = 0;
+	if (!new_env)
+		return (0);
 	array_len = env_len(shell->env);
 	result = (char **)malloc((array_len + 2) * sizeof(char *));
 	if (!result)
@@ -121,16 +91,12 @@ int	ft_putenv(t_shell *shell, char *new_env)
 		result[i] = shell->env[i];
 		i++;
 	}
-	result[i] = new_env;
+	result[i] = ft_strdup(new_env);
+	if (!result[i])
+		return (ft_free_split(result), 0);
 	result[++i] = NULL;
-	ft_free(environ);
+	ft_free(shell->env);
+	shell->env = result;
 	environ = result;
-	shell->env = environ;
 	return (1);
-}
-
-void	ft_exit_shell(t_shell *shell, long status)
-{
-	ft_free_shell(shell);
-	exit(status & 0xff);
 }

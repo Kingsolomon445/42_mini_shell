@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 17:44:10 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/11 17:45:44 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/16 18:20:56 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ static char	**unset_looper(t_shell *shell, char *env_title, char **updated_env)
 	i = 0;
 	j = 0;
 	new_env_title = ft_strjoin(env_title, "=");
+	if (!new_env_title)
+		return (NULL);
 	while (shell->env[j])
 	{
 		if (!ft_strnstr(shell->env[j], new_env_title, ft_strlen(new_env_title)))
@@ -60,7 +62,7 @@ static int	run_unset(t_shell *shell, char *env_title)
 	extern char	**environ;
 
 	updated_env = NULL;
-	if (!env_title)
+	if (!env_title || !shell->env)
 		return (1);
 	envlen = env_len(shell->env);
 	if (check_env(shell->env, env_title))
@@ -81,27 +83,29 @@ int	unset_var(t_shell *shell)
 	int	i;
 
 	i = 1;
-	shell->last_status = 0;
 	while (shell->cmd_head->toks[i])
 	{
 		if (!check_valid_identifier(shell->cmd_head->toks[i]))
 		{
 			if (*shell->cmd_head->toks[i] == '-')
-				invalid_option(shell, "unset", shell->cmd_head->toks[i]);
+			{
+				invalid_option("unset", shell->cmd_head->toks[i]);
+				return (2);
+			}
 			else
-				shell->last_status = print_error(1, "unset", \
-				shell->cmd_head->toks[i], INVALIDID);
+				return (print_error(1, "unset", \
+				shell->cmd_head->toks[i], INVALIDID));
 		}
 		else
 			if (!run_unset(shell, shell->cmd_head->toks[i]))
-				return (0);
+				return (12);
 		i++;
 	}
-	return (1);
+	return (0);
 }
 
-void	unset_main(t_shell *shell)
+int	unset_main(t_shell *shell)
 {
 	unset_var(shell);
-	exit (shell->last_status);
+	return (shell->last_status);
 }

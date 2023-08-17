@@ -3,89 +3,102 @@
 /*                                                        :::      ::::::::   */
 /*   parse_shell.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/08 17:38:22 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 19:46:17 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 19:45:24 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-int	parse_pipe(t_shell *shell, char **input, int *pipe_count, int i, char last_char)
+static int	make_cmds(char **commands, const char *input, int start, int end)
 {
-	char	*temp;
-	
-	(*pipe_count)++;
-	if (i == 0 || (*input)[i + 1] == '\0' || ((*input)[i - 1] == '|' && (*input)[i + 1] == '|') || ft_strchr("><", last_char))
-		return (ft_printf_fd(2, PIPESYNTAXERR), ft_free(*input), set_status(shell, 258), 0);
-	while((*input)[i] && ft_strchr(" \n\t\v\f\b><", (*input)[i]))
-		i++;
-	if (!((*input)[i]))
-		return (ft_printf_fd(2, SYNTAXERR), ft_free(*input), set_status(shell, 258), 0);
-	if ((*input)[i - 1] == '|')
-	{
-		temp = ft_substr(*input, 0, i - 1);
-		ft_free(*input);
-		*input = temp;
-		return (2);
-	}
+	*commands = ft_substr(input, start, end - start);
+	if (!*commands)
+		return (0);
+	commands[1] = NULL;
 	return (1);
 }
 
-
-
-int	split_and_validate(t_shell *shell)
+static char	**ft_split_commands(const char *input, int cmd_no, t_shell *shell)
 {
-	int in_s_quotes;
-	int	in_d_quotes;
-	int	pipe_count;
-	int	i;
-	char	*input;
-	char	last_char;
-	int	parse_pipe_res;
-	t_cmd_pos *cmd_pos;
+	int				cmd_index;
+	t_cmd_pos		*cmd_pos;
+	char			**commands;
+	int				start;
 
-	in_s_quotes = 0;
-	in_d_quotes = 0;
-	pipe_count = 0;
-	i = 0;
-	input = ft_strdup(shell->input);
 	if (!input)
-		return (0);
-	while(input[i])
+		return (NULL);
+	cmd_index = 0;
+	commands = (char **)malloc((cmd_no + 1) * sizeof(char *));
+	if (!commands)
+		return (NULL);
+	cmd_pos = shell->cmd_pos_head;
+	start = 0;
+	while (cmd_pos)
 	{
-		if (ft_strchr("'", input[i]) && !in_d_quotes)
-			in_s_quotes = !in_s_quotes;
-		if (ft_strchr("\"", input[i]) && !in_s_quotes)
-			in_d_quotes = !in_d_quotes;
-		else if (input[i] == '|' && !in_d_quotes && !in_s_quotes)
-		{
-			parse_pipe_res = parse_pipe(shell, &input, &pipe_count, i, last_char);
-			if (!parse_pipe_res)
-				return (0);
-			else if (parse_pipe_res == 2)
-				break ;
-			cmd_pos = ft_lstnew_cmdpos(i);
-			if (!cmd_pos)
-				return (0);
-			ft_lstadd_back_cmdpos(&shell->cmd_pos_head, cmd_pos);
-		}
-		last_char = input[i];
-		i++;
+		if (!make_cmds(commands + cmd_index++, input, start, cmd_pos->index))
+			return (ft_free_split(commands), NULL);
+		start = cmd_pos->index + 1;
+		cmd_pos = cmd_pos->next;
 	}
-	if ((in_s_quotes || in_d_quotes))
-		return (ft_printf_fd(2, "syntax error near unexpected token `%s'\n", input), ft_free(input), set_status(shell, 258), 0);
-	shell->commands = ft_split_input(input,  pipe_count + 1, shell);
-	return (ft_free(input), 1);
+	if (ft_strlen(input) > (size_t)start)
+		if (!make_cmds(commands + cmd_index++, input, start, ft_strlen(input)))
+			return (ft_free_split(commands), NULL);
+	return (commands);
+}
+
+static t_split_validate_vars	*init_split_and_validate_vars(char *input)
+{
+	t_split_validate_vars	*vars;
+
+	vars = malloc(sizeof(t_split_validate_vars));
+	if (!vars)
+		return (NULL);
+	vars->in_s_quotes = 0;
+	vars->in_d_quotes = 0;
+	vars->pipe_count = 0;
+	vars->cmd_pos = NULL;
+	vars->parse_pipe_res = 1;
+	vars->i = 0;
+	vars->input = ft_strdup(input);
+	if (!vars->input)
+		return (ft_free(vars), NULL);
+	return (vars);
+}
+
+static int	split_and_validate(t_shell *shell)
+{
+	t_split_validate_vars	*vars;
+
+	vars = init_split_and_validate_vars(shell->input);
+	if (!vars)
+		return (0);
+	while (vars->input[vars->i])
+	{
+		validate_input(shell, vars);
+		if (vars->parse_pipe_res < 1)
+			return (ft_free(vars->input), ft_free(vars), 0);
+		else if (vars->parse_pipe_res == 2)
+			break ;
+		vars->i++;
+	}
+	if ((vars->in_s_quotes || vars->in_d_quotes))
+		return (ft_printf_fd(2, \
+		"syntax error near unexpected token `%s'\n", vars->input), \
+		ft_free(vars->input), ft_free(vars), set_status(shell, 258), 0);
+	shell->commands = ft_split_commands(vars->input, \
+	vars->pipe_count + 1, shell);
+	return (ft_free(vars->input), ft_free(vars), 1);
 }
 
 int	parse_shell(t_shell *shell)
 {
-	char	**commands;
-	t_commands *cmd_head;
-	t_commands *cmd;
-	int		i;
+	char			**commands;
+	t_commands		*cmd_head;
+	t_commands		*cmd;
+	int				i;
 
 	i = 0;
 	cmd_head = NULL;
@@ -95,9 +108,8 @@ int	parse_shell(t_shell *shell)
 		return (0);
 	commands = shell->commands;
 	shell->no_cmds = 0;
-	while(commands[i])
+	while (commands[i])
 	{
-		// printf("commands here == %s\n", commands[i]);
 		shell->no_cmds++;
 		cmd = parse_commands(shell, commands[i]);
 		if (!cmd)
@@ -108,4 +120,3 @@ int	parse_shell(t_shell *shell)
 	shell->cmd_head = cmd_head;
 	return (1);
 }
-

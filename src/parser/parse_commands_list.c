@@ -3,30 +3,34 @@
 /*                                                        :::      ::::::::   */
 /*   parse_commands_list.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/13 20:49:41 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/15 20:27:28 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-t_commands	*ft_lstnew_cmd(t_shell *shell, t_redirection *redirection, t_token_pos *token_pos, char *command)
+t_commands	*ft_lstnew_cmd(t_shell *shell, \
+t_redir *redir, t_tok_pos *tok_pos, char *command)
 {
 	t_commands	*cmd;
 
 	cmd = malloc(sizeof(t_commands));
 	if (!cmd)
 		return (NULL);
-	cmd->red = redirection;
-	cmd->token_pos = token_pos;
+	cmd->red = redir;
+	cmd->tok_pos = tok_pos;
 	cmd->command = command;
+	cmd->vbin = NULL;
+	cmd->next = NULL;
 	cmd->toks = create_tokens(cmd);
+	if (!cmd->toks)
+		return (ft_free_cmds(&cmd), NULL);
 	cmd->vbin = get_valid_bin(shell, cmd->toks[0]);
 	cmd->cmd_pos = shell->no_cmds;
 	cmd->do_not_run = shell->do_not_run;
-	cmd->next = NULL;
 	return (cmd);
 }
 
@@ -58,7 +62,7 @@ void	ft_free_cmds(t_commands **cmd_head)
 		current = *cmd_head;
 		*cmd_head = (*cmd_head)->next;
 		ft_free_red(&current->red);
-		ft_free_tokenpos(&current->token_pos);
+		ft_free_tokenpos(&current->tok_pos);
 		ft_free_split(current->toks);
 		ft_free(current->command);
 		ft_free(current->vbin);

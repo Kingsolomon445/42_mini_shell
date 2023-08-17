@@ -1,22 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   list_utils_one.c                                   :+:      :+:    :+:   */
+/*   parse_redirection_list.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/07 17:29:01 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/15 19:03:30 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-t_redirection	*ft_lstnew_red(int red_type, int fd)
+t_redir	*ft_lstnew_red(int red_type, int fd)
 {
-	t_redirection	*new_red;
+	t_redir	*new_red;
 
-	new_red = malloc(sizeof(t_redirection));
+	new_red = malloc(sizeof(t_redir));
 	if (!new_red)
 		return (NULL);
 	new_red->red_type = red_type;
@@ -25,9 +25,9 @@ t_redirection	*ft_lstnew_red(int red_type, int fd)
 	return (new_red);
 }
 
-void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red)
+void	ft_lstadd_back_red(t_redir **red_head, t_redir *new_red)
 {
-	t_redirection	*current_red;
+	t_redir	*current_red;
 
 	if (!new_red)
 		return ;
@@ -42,9 +42,9 @@ void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red)
 	current_red->next = new_red;
 }
 
-void	ft_free_red(t_redirection **headref)
+void	ft_free_red(t_redir **headref)
 {
-	t_redirection	*current;
+	t_redir	*current;
 
 	if (!(*headref))
 		return ;

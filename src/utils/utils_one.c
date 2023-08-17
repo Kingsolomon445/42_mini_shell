@@ -3,30 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   utils_one.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:40:18 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:40:44 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-int	count_ocurrence(char *str, char ch)
-{
-	int occ;
-	int	i;
-
-	occ = 0;
-	i = 0;
-	while (*(str + i))
-	{
-		if (*(str + i) == ch)
-			occ++;
-		i++;
-	}
-	return (occ);
-}
 
 int	compare_str(char *src, char *dst)
 {
@@ -63,4 +47,24 @@ int	compare_builtin(char *src, char *dst)
 		i++;
 	}
 	return (1);
+}
+
+int	is_it_builtin(char **builtins, char *cmd)
+{
+	int	i;
+
+	i = 0;
+	while (*(builtins + i))
+	{
+		if (compare_builtin(*(builtins + i), cmd))
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+void	ft_exit_shell(t_shell *shell, long status)
+{
+	ft_free_shell(shell);
+	exit(status & 0xff);
 }

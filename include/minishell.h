@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:16:01 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/13 20:49:02 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:48:01 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,55 +38,59 @@
 # define OLDPWDNOTSET "OLDPWD not set"
 # define PIPESYNTAXERR "minishell: syntax error near unexpected token `|'\n"
 # define SYNTAXERR "minishell: syntax error near unexpected token `newline'\n"
+# define BUILTINS "echo cd pwd export unset env exit history"
 
-typedef struct s_redirection
+typedef struct s_redir
 {
-	int						red_type;
-	int						red_fd;
-	struct s_redirection	*next;
-}	t_redirection;
+	int					red_type;
+	int					red_fd;
+	struct s_redir		*next;
+}	t_redir;
 
-
-typedef struct s_token_pos
+typedef struct s_parse_vars
 {
-	int	index;
-	struct s_token_pos	*next;
-	
-} t_token_pos;
+	char	*str;
+	char	*new_str;
+	int		i;
+	int		j;
+	int		size;
+}	t_parse_vars;
+
+typedef struct s_tok_pos
+{
+	int					index;
+	struct s_tok_pos	*next;
+}	t_tok_pos;
 
 typedef struct s_cmd_pos
 {
-	int	index;
+	int					index;
 	struct s_cmd_pos	*next;
-} t_cmd_pos;
+}	t_cmd_pos;
 
 typedef struct s_commands
 {
 	char				**toks;
 	char				*command;
-	char				*cmd_type;
 	int					fds[2];
 	char				*vbin;
 	int					cmd_pos;
 	int					do_not_run;
-	t_redirection		*red;
-	t_token_pos		*token_pos;
+	t_tok_pos			*tok_pos;
+	t_redir				*red;
 	struct s_commands	*next;
 }	t_commands;
 
-typedef struct s_create_tokens
+typedef struct s_split_validate_vars
 {
-	char		**tokens;
-	int			size;
-	int			i;
-	int			is_quote;
-	int			token_no;
-	char		*new_str;
-	char		*new_str_ptr;
-	char		*single_quote;
-	char		*double_quote;
-	char		*temp;
-}	t_create_tokens;
+	int				in_s_quotes;
+	int				in_d_quotes;
+	int				pipe_count;
+	int				i;
+	char			*input;
+	int				parse_pipe_res;
+	t_cmd_pos		*cmd_pos;
+}	t_split_validate_vars;
 
 typedef struct s_shell
 {
@@ -98,129 +102,149 @@ typedef struct s_shell
 	char		*success_prompt;
 	char		*failed_prompt;
 	char		*input;
+	char		*delims;
 	int			last_status;
 	int			no_cmds;
 	int			dollar_idx;
 	int			sucess;
 	int			do_not_run;
-	int	cmd_cnt;
+	int			do_not_expand;
+	int			cmd_cnt;
+	int			expanded;
+	int			heredoc_ran;
 	t_commands	*cmd_head;
 	t_cmd_pos	*cmd_pos_head;
 	t_list		*hist_head;
 }	t_shell;
 
 
-char	**create_tokens(t_commands *cmd);
-int		parse_shell(t_shell *shell);
-t_commands *parse_commands(t_shell *shell, char *old_command);
-int	parse_redirection(t_shell *shell, char *command, int *idx, t_redirection **redirection);
-char	*expand(t_shell *shell, char *input, int *i);
-int	handle_redirections(t_commands *cmd);
-char **ft_split_input(const char *inp, int cmd_no, t_shell *shell);
+volatile sig_atomic_t	g_ctrlc;
 
-
-
-void	parse_quotes(t_shell *shell, char *cmd, char **new_cmd, int *i, int *j, int *size, char quote);
-int	parse_dollar(t_shell *shell, char **new_cmd, char *cmd, int *i, int *j, int *size);
-char	*ft_realloc(char *str, int *size);
-char	*ft_join(char *str, char *to_add);
-int	count_commands(char **commands);
-void append_to_new_cmd(char **new_cmd, int *size, int *j, char c);
+// INIT SHELL
+void			init_shell_for_next_read(t_shell *shell);
+int				init_shell(t_shell *shell);
 
 //PARSERS
 
+//PARSERS UTILS
+int				parse_quotes(t_shell *shell, t_parse_vars *vars, char *str);
+int				parse_dollar(t_shell *shell, t_parse_vars *vars, char *str);
+char			*ft_realloc(char *str, int size);
+char			*ft_join(char *str, char *to_add);
+t_parse_vars	*init_parse_vars(void);
+int				append_to_new_cmd(t_parse_vars *vars, int last);
+void			ft_increment_index(char *str, char *delims, int *idx, int comp);
+
 //PARSE INPUT
-int	open_fd(char *file_name, char red_type);
+int				parse_shell(t_shell *shell);
+char			*expand(t_shell *shell, char *input, int *i);
+void			validate_input(t_shell *shell, t_split_validate_vars *vars);
+
+//PARSE COMMAND AND TOKENIZE
+t_commands		*parse_commands(t_shell *shell, char *old_command);
+int				count_commands(char **commands);
+char			**create_tokens(t_commands *cmd);
+
+//PARSE REDIRECTION AND HEREDOC
+int				parse_redir(t_shell *shell, char *command, int *idx, t_redir **redir);
+int				parse_and_expand(t_shell *shell, t_parse_vars *vars, char *str);
+int				handle_redirs(t_commands *cmd);
+int				parse_heredoc(t_shell *shell, t_redir **redir, \
+char	*delimeter, char red_type);
+int				parse_in_out_append_redir(t_shell *shell, t_redir **redir, \
+char *file, char red_type);
+void			close_all_fds (t_redir **redir);
 
 
 //PROCESS && EXECUTORS
-void	run_commands(t_shell *shell);
-int		is_it_builtin(char **builtins, char *cmd);
-void	run_processes(t_commands *cmd, t_shell *shell, int fds[2]);
-void	ft_exec_in_child_process(t_shell *shell, t_commands *cmd);
+void			run_commands(t_shell *shell);
+int				is_it_builtin(char **builtins, char *cmd);
+void			run_processes(t_commands *cmd, t_shell *shell, int fds[2]);
+int				ft_exec_in_child_process(t_shell *shell, t_commands *cmd);
 
 //UTILS
-int		compare_str(char *src, char *dst);
-int		compare_builtin(char *src, char *dst);
-char	*get_valid_bin(t_shell *shell, char *cmd);
-char	**get_path_from_env(char **env);
-char	**get_final_path(void);
+int				compare_str(char *src, char *dst);
+int				compare_builtin(char *src, char *dst);
+char			*get_valid_bin(t_shell *shell, char *cmd);
+char			**get_path_from_env(char **env);
+char			**get_final_path(void);
+void			set_status(t_shell *shell, int status);
+void			checkleaks(void);
+char			*get_promt(void);
+void			set_terminal_attributes(void);
 
 //HISTORY
-void	print_history(t_shell *shell);
+int			print_history(t_shell *shell);
 
 //BUILT IN
-void	ft_execute_one_builtin(t_commands *cmd, t_shell *shell);
-int	update_env_item(t_shell *shell, char *env_title, char *new_env);
-int		check_valid_identifier(char *env_title);
-int		check_env(char **env, char *env_title);
-void	ft_execute_builtin(t_commands *cur_cmd, t_shell *shell);
-void    when_one_builtin(t_shell *shell, t_commands *cur_cmd);
+int				ft_execute_one_builtin(t_commands *cmd, t_shell *shell);
+int				update_env_item(t_shell *shell, char *env_title, char *new_env);
+int				check_valid_identifier(char *env_title);
+int				check_env(char **env, char *env_title);
+int			ft_execute_builtin(t_commands *cur_cmd, t_shell *shell);
+void			when_one_builtin(t_shell *shell, t_commands *cur_cmd);
 
 //HERE DOC
-int		run_here_doc(t_shell *shell, char *delim);
+int				run_here_doc(t_shell *shell, char *delim);
 
 //ENV
-int		env_len(char **str);
-int		init_shellenv(t_shell *shell);
-int		print_env(char **env);
-void	env_main(t_shell *shell, char **toks);
-int		ft_putenv(t_shell *shell, char *new_env);
+int				env_len(char **str);
+int				init_shellenv(t_shell *shell);
+int				print_env(char **env);
+int				env_main(t_shell *shell, char **toks);
+int				ft_putenv(t_shell *shell, char *new_env);
 
 //EXPORT
-int	export_env(t_shell *shell);
-
+int				export_env(t_shell *shell);
 
 //CD
-int		change_directory(t_shell *shell, t_commands *cmd);
+int				change_directory(t_shell *shell, t_commands *cmd);
 
 //PWD
-int		get_pwd(t_shell *shell);
+int				get_pwd(t_shell *shell);
 
 //UNSET
-int		unset_var(t_shell *shell);
-void	unset_main(t_shell *shell);
+int				unset_var(t_shell *shell);
+int				unset_main(t_shell *shell);
 
 //ECHO
-void	echo_echo(t_commands *cmd);
+int				echo_echo(t_commands *cmd);
 
 //EXIT
-void	perform_exit(t_commands *cmd, t_shell *shell);
+int			perform_exit(t_commands *cmd);
 
 //BUILTIN ERRORS
-void	invalid_option(t_shell *shell, char *builtin, char *error_arg);
-void    non_numeric_exit(t_shell *shell, char *invalid_arg, int exit_code);
-void    normal_exit(t_shell *shell);
-int		print_error(int status,  char *builtin, char *error_arg, char *msg);
+void			invalid_option(char *builtin, char *error_arg);
+void			non_numeric_exit(char *invalid_arg);
+void			normal_exit(t_shell *shell);
+int				print_error(int status,  char *builtin, char *error_arg, char *msg);
 
 //SIGNALS
-void	set_signal_act(void);
-void	ignore_signal(void);
-void	sig_handler(int sig_num);
+void			sig_int_handler_after_exec(int sig_num);
+void			sig_int_handler_before_exec(int sig_num);
+void			heredoc_sig_int_handler(int sig_num);
+
 
 //FREE
-void	ft_free_cmds(t_commands **cmd_head);
-void	ft_free_split(char **str);
-void	ft_free_shell(t_shell *shell);
-void	ft_free(void *ptr);
-void	ft_free_lst(t_list **headref);
-void	ft_free_for_next_read(t_shell *shell);
-void	ft_free_red(t_redirection **headref);
-
-void	ft_exit_shell(t_shell *shell, long status);
-void    set_status(t_shell *shell, int status);
-
+void			ft_free_cmds(t_commands **cmd_head);
+void			ft_free_split(char **str);
+void			ft_free_shell(t_shell *shell);
+void			ft_free(void *ptr);
+void			ft_free_lst(t_list **headref);
+void			ft_free_for_next_read(t_shell *shell);
+void			ft_free_red(t_redir **headref);
+void			ft_exit_shell(t_shell *shell, long status);
 
 //LINKED LISTS
-t_redirection	*ft_lstnew_red(int red_type, int fd);
-void	ft_lstadd_back_red(t_redirection **red_head, t_redirection *new_red);
-t_commands	*ft_lstnew_cmd(t_shell *shell, t_redirection *redirection, t_token_pos *token_pos, char *command);
-void	ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd);
-t_token_pos  *ft_lstnew_tokenpos(int index);
-void ft_lstadd_back_tokenpos(t_token_pos **token_pos_head, t_token_pos *new_token_pos);
-void	ft_free_tokenpos(t_token_pos **token_pos);
-t_cmd_pos  *ft_lstnew_cmdpos(int index);
-void ft_lstadd_back_cmdpos(t_cmd_pos **cmd_pos_head, t_cmd_pos *new_cmd_pos);
-void	ft_free_cmdpos(t_cmd_pos **cmd_pos);
+t_redir			*ft_lstnew_red(int red_type, int fd);
+void			ft_lstadd_back_red(t_redir **red_head, t_redir *new_red);
+t_commands		*ft_lstnew_cmd(t_shell *shell, t_redir *redir, t_tok_pos *tok_pos, char *command);
+void			ft_lstadd_back_cmd(t_commands **cmd_head, t_commands *new_cmd);
+t_tok_pos		*ft_lstnew_tokenpos(int index);
+void			ft_lstadd_back_tokenpos(t_tok_pos **tok_pos_head, t_tok_pos *new_tok_pos);
+void			ft_free_tokenpos(t_tok_pos **tok_pos);
+t_cmd_pos		*ft_lstnew_cmdpos(int index);
+void			ft_lstadd_back_cmdpos(t_cmd_pos **cmd_pos_head, t_cmd_pos *new_cmd_pos);
+void			ft_free_cmdpos(t_cmd_pos **cmd_pos);
 
 #endif

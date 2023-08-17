@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   echo_builtin.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 17:49:22 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/12 19:27:13 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 18:21:35 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ static int	is_valid_n(char	*arg, int *need_print)
 	int	i;
 
 	i = 0;
-	if (*need_print == 1)
+	if (*need_print)
 		return (0);
 	if (arg[i] == '-')
 		i++;
@@ -78,7 +78,7 @@ static void	print_echo_offcase(t_commands *cmd, int i)
 	}
 }
 
-void	echo_echo(t_commands *cmd)
+int	echo_echo(t_commands *cmd)
 {
 	int	i;
 	int	new_line;
@@ -103,5 +103,5 @@ void	echo_echo(t_commands *cmd)
 				ft_printf_fd(1, "\n");
 		}
 	}
-	exit (0);
+	return (0);
 }

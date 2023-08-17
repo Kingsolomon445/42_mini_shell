@@ -3,74 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/10 15:13:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/13 17:23:21 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/16 20:38:37 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-// ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la > > out | cat << stop3
-// We need to handle when a command starts with / or ~ or /bin/ 
-
-
-// ls >"./ with spaces"
-
-/*touch whatever
-cat <"./whatever" >"./whatever"
-rm -rf whatever */
-
-/*>echo>
-/bin/rm -f echo
-
-<echo<
-/bin/rm -f echo
-
->>echo>>
-/bin/rm -f echo*/
-/*
-cd ~/Desktop/
-
-export test=" * "
-touch "$USER * ?eHallo"
-/bin/echo "$USER "*" ?e"*
-rm -f "$USER * ?eHallo"
-
-strip whitespaces after expansion
-
-$tmp_test
-
-
-echo $TES_T
-*/
-
-
-int	init_prompt_title(t_shell *shell)
-{
-	char *holder;
-	
-	if (getenv("USER"))
-	{
-		holder = ft_strjoin(getenv("USER"), "@minishell$ ");
-		if (!holder)
-			return (0);
-	}
-	else
-	{
-		holder = ft_strjoin("guest", "@minishell$ ");
-		if (!holder)
-			return (0);
-	}
-	shell->success_prompt = ft_strjoin("🟢", holder);
-	if (!shell->success_prompt)
-		return (ft_free(holder), 0);
-	shell->failed_prompt = ft_strjoin("🔴", holder);
-	if (!shell->failed_prompt)
-		return (ft_free(holder), 0);
-	return (ft_free(holder), 1);
-}
 
 static int	take_input(t_shell *shell)
 {
@@ -88,12 +28,14 @@ static int	take_input(t_shell *shell)
 	{
 		char *line;
 		line = get_next_line(fileno(stdin));
+		if (!line)
+			return (1);
 		shell->input = ft_strtrim(line, "\n");
 		free(line);
 	}
 	if (!shell->input)
 		return (1);
-	if (*shell->input)
+	if (*shell->input && shell->input[0] != '#')
 	{	
 		content = ft_strdup(shell->input);
 		if (!content)
@@ -101,59 +43,12 @@ static int	take_input(t_shell *shell)
 		new = ft_lstnew(content);
 		if (!new)
 			return (ft_free(content), -1);
-		if (!shell->hist_head)
-			shell->hist_head = new;
-		else
-			ft_lstadd_back(&(shell->hist_head), new);
+		ft_lstadd_back(&(shell->hist_head), new);
 		return (0);
 	}
 	return (ft_free(shell->input), -1);
 }
 
-
-static int	init_shell(t_shell *shell)
-{
-	char	*new_level;
-
-	shell->cmd_head = NULL;
-	shell->hist_head = NULL;
-	shell->input = NULL;
-	shell->commands = NULL;
-	shell->cmd_pos_head = NULL;
-	shell->sucess = 1;
-	if (!init_prompt_title(shell))
-		return (0);
-	shell->welcome_str = shell->success_prompt;
-	shell->path = get_final_path();
-	shell->builtins = \
-	ft_split("echo cd pwd export unset env exit history", ' ');
-	if (!shell->builtins || !shell->welcome_str)
-		return (0);
-	shell->last_status = 0;
-	if (!init_shellenv(shell))
-		return (0);
-	if (!getenv("SHLVL"))
-	{
-		ft_putenv(shell, ft_strdup("SHLVL=1"));
-		new_level = ft_strdup("1");
-	}
-	else
-		new_level = ft_itoa(ft_atoi(getenv("SHLVL")) + 1);
-	if (!new_level)
-		return (0);
-	return (update_env_item(shell, "SHLVL", new_level), ft_free(new_level), 1);
-}
-
-static	void	init_shell_for_next_read(t_shell *shell)
-{
-	shell->cmd_head = NULL;
-	shell->hist_head = NULL;
-	shell->input = NULL;
-	shell->commands = NULL;
-	shell->cmd_pos_head = NULL;
-	shell->sucess = 1;
-	shell->path = get_final_path();
-}
 
 void	printf_welcome(void)
 {
@@ -169,6 +64,27 @@ void	printf_welcome(void)
 	ft_printf_fd(1, "*************************************************************************\n");
 }
 
+// void	start_shell(t_shell *shell)
+// {
+// 	int	input_sucess;
+
+// 	input_sucess = take_input(shell);
+// 	if (input_sucess == 1)
+// 	{
+// 		ft_free_shell(shell);
+// 		exit(shell->last_status);
+// 	}
+// 	else if (input_sucess == -1)
+// 		start_shell(shell) ;
+// 	add_history(shell->input);
+// 	if (parse_shell(shell))
+// 		run_commands(shell);
+// 	ft_free_for_next_read(shell);
+// 	init_shell_for_next_read(shell);
+// 	start_shell(shell);
+// }
+
+
 int	main(void)
 {
 	t_shell			*shell;
@@ -176,21 +92,26 @@ int	main(void)
 	int				input_sucess;
 
 	status = 0;
-	ignore_signal();
-	set_signal_act();
+	signal(SIGQUIT, SIG_IGN);
+	set_terminal_attributes();
 	// atexit(&checkleaks);
 	shell = malloc(sizeof(t_shell));
 	if (!shell)
 		exit(12);
-	init_shell(shell);
+	shell->hist_head = NULL;
+	if (!init_shell(shell))
+		return (ft_free_shell(shell), status);
 	while (1)
 	{
+		g_ctrlc = 0;
+		signal(SIGINT, sig_int_handler_before_exec);
 		input_sucess = take_input(shell);
 		if (input_sucess == 1)
-			exit(shell->last_status);
+			ft_exit_shell(shell, shell->last_status);
 		else if (input_sucess == -1)
 			continue ;
 		add_history(shell->input);
+		signal(SIGINT, sig_int_handler_after_exec);
 		if (parse_shell(shell))
 			run_commands(shell);
 		status = shell->last_status;
@@ -199,3 +120,19 @@ int	main(void)
 	}
 	return (ft_free_shell(shell), status);
 }
+
+// int	main(void)
+// {
+// 	t_shell			*shell;
+
+// 	ignore_signal();
+// 	set_signal_act();
+// 	shell = malloc(sizeof(t_shell));
+// 	if (!shell)
+// 		exit(12);
+// 	if (!init_shell(shell))
+// 		return (ft_free_shell(shell), 1);
+// 	start_shell(shell);
+// 	return (0);
+// 	// return (ft_free_shell(shell), status);
+// }
