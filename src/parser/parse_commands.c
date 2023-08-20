@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/09 19:49:59 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 19:36:03 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 17:15:09 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,102 +50,30 @@ t_parse_vars	*init_parse_vars(void)
 	vars->size = 30;
 	vars->i = 0;
 	vars->j = 0;
+	vars->str = NULL;
 	vars->new_str = malloc(vars->size);
 	if (!vars->new_str)
 		return (ft_free(vars), NULL);
 	return (vars);
 }
 
-
-char    *parse_expand(t_parse_vars *vars, t_tok_pos **tok_pos, char *env_value)
+int	parse_all(t_shell *shell, t_redir **redir, t_tok_pos **tok_pos, \
+t_parse_vars *vars)
 {
-    char new_env_value[ft_strlen(env_value)];
-    int i;
-    int j;
-    char    quote;
-    t_tok_pos *new_tok_pos;
-
-    i = 0;
-    j = 0;
-	if (ft_strchr(" \v\t\f\b\n", vars->new_str[vars->j - 1]))
-		ft_increment_index(env_value, " \v\t\f\b\n", &i, 1);
-    while(env_value[i])
-    {
-        if (ft_strchr("\"'", env_value[i]))
-        {
-            quote = env_value[i];
-            new_env_value[j++] = env_value[i++];
-            while(env_value[i] && env_value[i] != quote)
-                new_env_value[j++] = env_value[i++];
-            new_env_value[j++] = env_value[i++];
-        }
-        else if (ft_strchr(" \t\v\f\b\n", env_value[i]))
-        {
-            new_env_value[j++] = env_value[i++];
-            new_tok_pos = ft_lstnew_tokenpos(vars->j + j - 1);
-            ft_lstadd_back_tokenpos(tok_pos, new_tok_pos);
-            ft_increment_index(env_value, " \v\t\f\b\n", &i, 1);
-        }
-        else
-            new_env_value[j++] = env_value[i++];
-    }
-	new_env_value[j] = '\0';
-    return (ft_free(env_value), ft_strdup(new_env_value));
-}
-
-int parse_dollar_extra(t_shell *shell, t_parse_vars *vars, char *str, t_tok_pos **tok_pos)
-{
-    char    *env_value;
-
-    if (str[vars->i + 1] && (ft_isalnum(str[vars->i + 1]) \
-    || ft_strchr("_?$\"'", str[vars->i + 1])))
-    {
-        vars->i++;
-        env_value = expand(shell, str + vars->i, &vars->i);
-        env_value = parse_expand(vars, tok_pos, env_value);
-        if (!env_value)
-            return (0);
-        vars->new_str[vars->j] = '\0';
-        vars->new_str = ft_join(vars->new_str, env_value);
-        if (!vars->new_str)
-            return (0);
-        vars->j = ft_strlen(vars->new_str);
-        vars->size = vars->j;
-    }
-    else
-        vars->new_str[vars->j++] = str[vars->i++];
-    return (1);
-}
-
-void	close_all_fds(t_redir **redir)
-{
-	t_redir	*cur_redir;
-
-	cur_redir = *redir;
-	while (cur_redir)
+	if (ft_strchr("\"'", vars->str[vars->i]))
 	{
-		close(cur_redir->red_fd);
-		cur_redir = cur_redir->next;
-	}
-}
-
-
-int	parse_all(t_shell *shell, t_redir **redir, t_tok_pos **tok_pos, char *cmd, t_parse_vars *vars)
-{
-	if (ft_strchr("\"'", cmd[vars->i]))
-	{
-		if (!parse_quotes(shell, vars, cmd))
+		if (!parse_quotes(shell, vars, vars->str))
 			return (-1);
 	}
-	else if (cmd[vars->i] == '$')
+	else if (vars->str[vars->i] == '$')
 	{
-		if (!parse_dollar_extra(shell, vars, cmd, tok_pos))
+		if (!parse_dollar_extra(shell, vars, vars->str, tok_pos))
 			return (-1);
 	}
-	else if (ft_strchr("><", cmd[vars->i]))
-		return (parse_redir(shell, cmd + vars->i, &vars->i, redir));
+	else if (ft_strchr("><", vars->str[vars->i]))
+		return (parse_redir(shell, vars->str + vars->i, &vars->i, redir));
 	else
-		return (parse_backslash(tok_pos, vars, cmd));
+		return (parse_backslash(tok_pos, vars, vars->str));
 	return (1);
 }
 
@@ -157,10 +85,11 @@ char	*parse(t_shell *shell, char *cmd, t_tok_pos **tok_pos, t_redir **redir)
 	vars = init_parse_vars();
 	if (!vars)
 		return (NULL);
+	vars->str = cmd;
 	while (cmd[vars->i])
 	{
 		shell->do_not_expand = 0;
-		shell->sucess = parse_all(shell, redir, tok_pos, cmd, vars);
+		shell->sucess = parse_all(shell, redir, tok_pos, vars);
 		if (shell->do_not_run && shell->cmd_cnt > 1)
 			break ;
 		if (shell->sucess < 1 || (shell->cmd_cnt == 1 && shell->do_not_run))
@@ -190,7 +119,7 @@ t_commands	*parse_commands(t_shell *shell, char *old_command)
 	redir = NULL;
 	new_cmd = parse(shell, cmd, &tok_pos, &redir);
 	if (!new_cmd)
-		return (NULL);
+		return (ft_free_tokenpos(&tok_pos), NULL);
 	if (compare_str("", new_cmd) && redir)
 	{
 		shell->last_status = 0;

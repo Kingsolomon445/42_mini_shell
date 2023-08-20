@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+         #
+#    By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/22 13:18:59 by sbhatta           #+#    #+#              #
-#    Updated: 2023/07/19 13:05:02 by ofadahun         ###   ########.fr        #
+#    Updated: 2023/08/18 18:07:51 by sbhatta          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,26 +20,61 @@ NAME = minishell
 LIBFT_PATH = ./lib/libft
 LIBFT = $(LIBFT_PATH)/libft.a
 READLINE = $(HOME)/.brew/opt/readline
-SRC_DIR = ./src
 OBJ_DIR = ./obj
 
-SRCS =  $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c)
+GREEN		= \033[1;32m
+WHITE		= \033[0m
+RED 		= \033[0;31m
 
-OBJS = $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o)))
+SRCS =  ./src/builtins/builtin_utils.c \
+		./src/builtins/cd_builtin.c \
+		./src/builtins/echo_builtin.c \
+		./src/builtins/env_builtin.c \
+		./src/builtins/exit_builtin.c \
+		./src/builtins/export_builtin.c \
+		./src/builtins/print_builtin_error.c \
+		./src/builtins/pwd_builtin.c \
+		./src/builtins/unset_builtin.c \
+		./src/parser/parse_commands_list.c \
+		./src/parser/parse_commands.c \
+		./src/parser/parse_heredoc.c \
+		./src/parser/parse_redirection_list.c \
+		./src/parser/parse_redirection_utils.c \
+		./src/parser/parse_redirection.c \
+		./src/parser/parse_shell_list.c \
+		./src/parser/parse_shell_utils.c \
+		./src/parser/parse_shell.c \
+		./src/parser/parse_tokens_list.c \
+		./src/parser/parse_tokens.c \
+		./src/processes/init_process.c \
+		./src/processes/run_process.c \
+		./src/utils/builtin_utils.c \
+		./src/utils/env_utils.c \
+		./src/utils/free_utils.c \
+		./src/utils/heredoc_utils.c \
+		./src/utils/init_shell.c \
+		./src/utils/parser_utils_four.c \
+		./src/utils/parser_utils_one.c \
+		./src/utils/parser_utils_three.c \
+		./src/utils/parser_utils_two.c \
+		./src/utils/shell_utils.c \
+		./src/utils/signal_utils.c \
+		./src/utils/utils_one.c \
+		./src/utils/utils_two.c \
+		./src/main.c
+
+OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJS) $(LIBFT)
 	$(CC) -o $@ $^ $(LDFLAG)
+	@echo "$(GREEN)Minishell is ready 👍$(GREEN)"
 
 $(LIBFT):
 		@make all -C $(LIBFT_PATH) 
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) -o $@ $< $(INCFLAGS)
-	
-$(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.c
+$(OBJ_DIR)/%.o: %.c
 	mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) -o $@ $< $(INCFLAGS)
 
@@ -50,6 +85,7 @@ clean:
 fclean: clean
 	make -C $(LIBFT_PATH) fclean
 	rm -f $(NAME)
+	@echo "$(GREEN)The project is cleaned! 🗑️$(GREEN)"
 	
 re:	fclean all
 

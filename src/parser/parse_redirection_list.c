@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/07 17:17:48 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/15 19:03:30 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 12:09:28 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ void	ft_free_red(t_redir **headref)
 	while (*headref)
 	{
 		current = *headref;
+		close(current->red_fd);
 		*headref = (*headref)->next;
 		ft_free(current);
 	}

@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 16:11:17 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/05 17:03:21 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 16:33:53 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ void			*ft_memset(void *b, int c, size_t len);
 size_t			ft_strlcat(char *dst, const char *src, size_t dstsize);
 size_t			ft_strlcpy(char *dst, const char *src, size_t dstsize);
 int				ft_strncmp(const char *s1, const char *s2, int n);
-char			*ft_strnstr(const char *haystack, const char *needle, size_t len);
+char			*ft_strnstr(const char *haystack, \
+				const char *needle, size_t len);
 size_t			ft_strlen(const char *s);
 int				ft_tolower(int c);
 int				ft_toupper(int c);

@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:40:18 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 20:40:44 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/17 17:19:11 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,4 +67,10 @@ void	ft_exit_shell(t_shell *shell, long status)
 {
 	ft_free_shell(shell);
 	exit(status & 0xff);
+}
+
+void	print_error_exit(t_shell *shell, char *error_msg, int status)
+{
+	ft_printf_fd(2, "%s", error_msg);
+	ft_exit_shell(shell, status);
 }

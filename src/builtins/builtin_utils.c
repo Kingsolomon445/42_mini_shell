@@ -6,12 +6,11 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/11 12:21:14 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/16 20:27:23 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 18:25:21 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
 
 static int	when_cap_cd(t_shell *shell, char **toks)
 {
@@ -55,7 +54,7 @@ int	ft_execute_builtin(t_commands *cur_cmd, t_shell *shell)
 
 	pid = fork();
 	if (pid < 0)
-		return(1);
+		return (1);
 	else if (pid == 0)
 	{
 		status = ft_execute_one_builtin(cur_cmd, shell);
@@ -71,7 +70,9 @@ void	when_one_builtin(t_shell *shell, t_commands *cur_cmd)
 	if (compare_str("exit", cur_cmd->toks[0]))
 	{
 		shell->last_status = perform_exit(cur_cmd);
-		ft_exit_shell(shell, shell->last_status);
+		if (!(cur_cmd->toks[1] && ft_isnumber(cur_cmd->toks[1]) \
+		&& cur_cmd->toks[2]))
+			ft_exit_shell(shell, shell->last_status);
 	}
 	else if (compare_str("export", cur_cmd->toks[0]))
 		shell->last_status = export_env(shell);
@@ -79,6 +80,36 @@ void	when_one_builtin(t_shell *shell, t_commands *cur_cmd)
 		shell->last_status = unset_var(shell);
 	else if (compare_str("cd", cur_cmd->toks[0]))
 		shell->last_status = change_directory(shell, cur_cmd);
+	else if (compare_str("history", cur_cmd->toks[0]) == 1)
+		shell->last_status = print_history(shell);
 	else
 		shell->last_status = ft_execute_builtin(cur_cmd, shell);
+}
+
+void	print_export(char **env, int equalcount)
+{
+	int			i;
+	int			j;
+
+	i = -1;
+	j = -1;
+	while (env[++i])
+	{
+		ft_printf_fd(1, "declare -x ");
+		while (env[i][++j])
+		{
+			ft_printf_fd(1, "%c", env[i][j]);
+			if (env[i][j] == '=' && !equalcount)
+			{
+				equalcount = 1;
+				ft_printf_fd(1, "\"");
+			}
+			if (env[i][j + 1] == '\0' && equalcount)
+				ft_printf_fd(1, "\"\n");
+			else if (env[i][j + 1] == '\0' && !equalcount)
+				ft_printf_fd(1, "\n");
+		}
+		equalcount = 0;
+		j = -1;
+	}
 }

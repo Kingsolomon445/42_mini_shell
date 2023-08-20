@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   print_builtin_error.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 14:16:05 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/16 14:49:45 by ofadahun         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:05:53 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ void	non_numeric_exit(char *invalid_arg)
 	ft_printf_fd(2, "minishell: exit: ");
 	ft_printf_fd(2, "%s: numeric argument required\n", invalid_arg);
 }
-
 
 int	print_error(int status, char *builtin, char *error_arg, char *msg)
 {

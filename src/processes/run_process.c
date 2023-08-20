@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:26:40 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 20:34:13 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 15:05:21 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int	ft_dup(int fds[2], int in)
 int	run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 {
 	if (g_ctrlc)
-        ft_exit_shell(shell, 1);
+		ft_exit_shell(shell, 1);
 	if (cmd->cmd_pos == 1)
 		shell->sucess = ft_dup(cmd->fds, 0);
 	else if (cmd->cmd_pos == shell->no_cmds)
@@ -42,18 +42,12 @@ int	run_in_child_process(t_commands *cmd, t_shell *shell, int fds[2])
 	else
 	{
 		if (!ft_dup(fds, 1))
-		{
-			perror("dup");
-			ft_exit_shell(shell, 1);
-		}
+			print_error_exit(shell, strerror(errno), 1);
 		else
 			shell->sucess = ft_dup(cmd->fds, 0);
 	}
 	if (!shell->sucess)
-	{
-		perror("dup");
-		ft_exit_shell(shell, 1);
-	}
+		print_error_exit(shell, strerror(errno), 1);
 	if (cmd->do_not_run)
 		ft_exit_shell(shell, 1);
 	if (!is_it_builtin(shell->builtins, cmd->toks[0]))
@@ -65,6 +59,14 @@ void	close_fds(int fd_in, int fd_out)
 {
 	close(fd_in);
 	close(fd_out);
+}
+
+static void	in_child(t_shell *shell, t_commands *cmd, int fds[2], int *status)
+{
+	*status = run_in_child_process(cmd, shell, fds);
+	if (cmd->cmd_pos == shell->no_cmds)
+		close_fds(cmd->fds[0], cmd->fds[1]);
+	ft_exit_shell(shell, *status);
 }
 
 void	run_processes(t_commands *cmd, t_shell *shell, int fds[2])
@@ -80,10 +82,7 @@ void	run_processes(t_commands *cmd, t_shell *shell, int fds[2])
 	if (pid < 0)
 		exit(1);
 	else if (pid == 0)
-	{
-		status = run_in_child_process(cmd, shell, fds);
-		ft_exit_shell(shell, status);
-	}
+		in_child(shell, cmd, fds, &status);
 	if (cmd->cmd_pos != 1)
 		close_fds(fds[0], fds[1]);
 	prev_cmd = cmd;

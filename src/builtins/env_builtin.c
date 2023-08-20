@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/14 17:18:56 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/16 20:12:35 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 18:11:42 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,3 @@ int	env_main(t_shell *shell, char **toks)
 	else
 		return (print_env(shell->env));
 }
-
-//export TEST+=100
-//env what

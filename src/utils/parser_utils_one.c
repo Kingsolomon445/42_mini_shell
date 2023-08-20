@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/16 14:53:09 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 20:53:36 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/17 19:21:54 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,12 @@ static char	*get_env_value(char *env_title, int last_status)
 static int	parse_dir(t_shell *shell, char *current_bin)
 {
 	struct stat	st;
+	DIR			*temp_dir;
 
 	shell->do_not_run = 1;
-	if (opendir(current_bin))
-		return (set_status(shell, 126), \
+	temp_dir = opendir(current_bin);
+	if (temp_dir)
+		return (closedir(temp_dir), set_status(shell, 126), \
 		print_error(1, NULL, current_bin, "is a directory"), 1);
 	if (stat(current_bin, &st) == 0)
 	{

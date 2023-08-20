@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:54:25 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 20:53:06 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 17:22:05 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,33 +70,4 @@ int	print_history(t_shell *shell)
 void	set_status(t_shell *shell, int status)
 {
 	shell->last_status = status;
-}
-
-int	ft_putenv(t_shell *shell, char *new_env)
-{
-	extern char		**environ;
-	int				array_len;
-	char			**result;
-	int				i;
-
-	i = 0;
-	if (!new_env)
-		return (0);
-	array_len = env_len(shell->env);
-	result = (char **)malloc((array_len + 2) * sizeof(char *));
-	if (!result)
-		return (0);
-	while (shell->env[i])
-	{
-		result[i] = shell->env[i];
-		i++;
-	}
-	result[i] = ft_strdup(new_env);
-	if (!result[i])
-		return (ft_free_split(result), 0);
-	result[++i] = NULL;
-	ft_free(shell->env);
-	shell->env = result;
-	environ = result;
-	return (1);
 }

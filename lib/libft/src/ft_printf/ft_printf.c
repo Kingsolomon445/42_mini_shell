@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/12 17:01:30 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/06 17:48:59 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 16:35:13 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ int	ft_printf_fd(int fd, const char *str, ...)
 			if (*str == 's')
 				ft_printf_str(&i, va_arg(args, char *), fd);
 			else if (*str == 'p' || *str == 'd' || *str == 'i' || *str == 'c')
-				ft_printf_ptr((unsigned long)(va_arg(args, void *)), &i, *str, fd);
+				ft_printf_ptr((unsigned long)(va_arg(args, void *)), \
+				&i, *str, fd);
 			else if (*str == 'x' || *str == 'X' || *str == 'u')
 				ft_print_hex(va_arg(args, unsigned int), *str, &i, fd);
 			else if (*str == '%')
@@ -37,6 +38,5 @@ int	ft_printf_fd(int fd, const char *str, ...)
 			ft_printf_char(&i, *str, fd);
 		str++;
 	}
-	va_end(args);
-	return (i);
+	return (va_end(args), i);
 }

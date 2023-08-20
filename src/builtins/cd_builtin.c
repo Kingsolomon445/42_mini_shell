@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/16 18:19:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/16 20:12:18 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/18 13:23:32 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,9 @@ char	*eval_cd_args(t_shell *shell, t_commands *cmd, char *dir)
 
 static int	update_pwdvars(t_shell *shell, char *dir_type, char *pwdtype)
 {
+	char	*join_pwdtype;
+
+	join_pwdtype = NULL;
 	if (getenv(pwdtype))
 	{
 		if (!update_env_item(shell, pwdtype, dir_type))
@@ -70,12 +73,13 @@ static int	update_pwdvars(t_shell *shell, char *dir_type, char *pwdtype)
 	}
 	else
 	{
-		if (!ft_putenv(shell, ft_strjoin(pwdtype, "=")))
+		join_pwdtype = ft_strjoin(pwdtype, "=");
+		if (!ft_putenv(shell, join_pwdtype))
 			return (0);
 		if (!update_env_item(shell, pwdtype, dir_type))
-			return (0);
+			return (ft_free(join_pwdtype), 0);
 	}
-	return (1);
+	return (ft_free(join_pwdtype), 1);
 }
 
 static int	update_pwd(t_shell *shell, char *old_dir)

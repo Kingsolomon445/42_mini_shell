@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_process.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ofadahun <ofadahun@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 12:20:12 by ofadahun          #+#    #+#             */
-/*   Updated: 2023/08/16 20:00:22 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/17 17:05:50 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,8 @@ int	ft_exec_in_child_process(t_shell *shell, t_commands *cmd)
 	if (errno == 2)
 		return (127);
 	else if (errno == 13)
-		return(127);
-	return(1);
+		return (127);
+	return (1);
 }
 
 void	ft_execute_one_cmd(t_commands *cmd, t_shell *shell)
